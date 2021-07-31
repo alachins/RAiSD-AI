@@ -6,9 +6,9 @@ Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavli
 
 First release: 9/6/2017 
 
-Last update: 6/8/2020       
+Last update: 31/7/2021       
 
-Version: 2.9
+Version: 3.0
 
 About
 -----
