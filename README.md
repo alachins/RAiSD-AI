@@ -553,6 +553,14 @@ d) At each position x, the first ingroup state that differs from the REF state i
 
 e) Per sample entry, all ALT states in the ingroup are set to 1, all remaining states are set to 0, and all gaps
    and Ns are represented by a dot (‘.’).
+   
+VCF-to-ms conversion
+-----------------------
+As of version 3.0, RAiSD can convert a VCF file to ms format (in addition to its regular mode of operation). This can be done using the -Q parameter, which requires an INTEGER value to specify the memory size (in MB) to be allocated for this conversion. If the provided memory size is not sufficiently large based on the VCF file size, execution will be terminated and an error will be generated to inform about the insufficient memory size (in the case of large VCF files, this error might be generated after some minutes). The following command demonstrates the use of -Q: 
+
+	$ ./RAiSD -n test_run -I input.vcf -L 100000 -Q 10 
+
+The above command will calculate the μ statistic and will additionally generate the file input.vcf.ms (ms format), allocating approx. 10 MB of memory for the conversion and assuming a chromosome length of 100000 bp.
 
 Grid size
 ---------
