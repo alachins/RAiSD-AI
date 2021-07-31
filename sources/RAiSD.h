@@ -74,9 +74,10 @@ extern double TotalMuTime;
 #define WIN_MODE_DSR 3 // double-sided reduction
 
 #define STRING_SIZE 8192
-#define PATTERNPOOL_SIZE 1 // MBs without the mask (actual memfootprint approx. double)
+#define PATTERNPOOL_SIZE 8 // MBs without the mask (actual memfootprint approx. double)
 #define	PATTERNPOOL_SIZE_MASK_FACTOR 2
 #define CHUNK_MEMSIZE_AND_INCREMENT 1024 // sites
+#define POSITIONLIST_MEMSIZE_AND_INCREMENT 1024 // positions
 #define MULTI_STEP_PARSING 0
 #define SINGLE_STEP_PARSING 1 // set this to 0 to deactivate completely
 #define DEFAULT_WINDOW_SIZE 50
@@ -123,6 +124,8 @@ extern double TotalMuTime;
 
 #define FASTA2VCF_CONVERT_n_PROCESS 0
 #define FASTA2VCF_CONVERT_n_EXIT 1
+
+#define VCF2MS_CONVERT 1
 
 #define GAP '-'
 #define AD 'A'
@@ -250,17 +253,19 @@ typedef struct
 	char		outgroupName[STRING_SIZE]; // Flag: C
 	char		outgroupName2[STRING_SIZE]; // Flag: C2
 	char		chromNameVCF[STRING_SIZE]; // Flag: H
-	int64_t		fasta2vcfMode; // E
-	int64_t		gridSize; // G
-	int64_t		createCOPlot; // CO
-	char 		reportFilenameSweeD[STRING_SIZE]; // CO
-	int		positionIndexSweeD; // CO
-	int		scoreIndexSweeD; // CO
-	char 		reportFilenameRAiSD[STRING_SIZE]; // CO
-	int		positionIndexRAiSD; // CO
-	int		scoreIndexRAiSD; // CO
-	char		commonOutliersThreshold[STRING_SIZE]; // COT
-	double		commonOutliersMaxDistance; // COD
+	int64_t		fasta2vcfMode; // Flag: E
+	int64_t		vcf2msExtra; // Flag: Q
+	int64_t		vcf2msMemsize; // Flag: Q
+	int64_t		gridSize; // Flag: G
+	int64_t		createCOPlot; // Flag: CO
+	char 		reportFilenameSweeD[STRING_SIZE]; // Flag: CO
+	int		positionIndexSweeD; // Flag: CO
+	int		scoreIndexSweeD; // Flag: CO
+	char 		reportFilenameRAiSD[STRING_SIZE]; // Flag: CO
+	int		positionIndexRAiSD; // Flag: CO
+	int		scoreIndexRAiSD; // Flag: CO
+	char		commonOutliersThreshold[STRING_SIZE]; // Flag: COT
+	double		commonOutliersMaxDistance; // Flag: COD
 
 } RSDCommandLine_t;
 
@@ -428,12 +433,12 @@ typedef struct
 
 } RSDPatternPool_t;
 
-RSDPatternPool_t * 	RSDPatternPool_new			(void);
+RSDPatternPool_t * 	RSDPatternPool_new			(RSDCommandLine_t * RSDCommandLine);
 void 			RSDPatternPool_free			(RSDPatternPool_t * pp);
 void 			RSDPatternPool_init 			(RSDPatternPool_t * RSDPatternPool, RSDCommandLine_t * RSDCommandLine, int64_t numberOfSamples);
 void 			RSDPatternPool_print			(RSDPatternPool_t * RSDPatternPool, FILE * fpOut);
 void 			RSDPatternPool_reset 			(RSDPatternPool_t * RSDPatternPool, int64_t numberOfSamples, int64_t setSamples, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine);
-int			RSDPatternPool_pushSNP			(RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDChunk, int64_t numberOfSamples);
+int			RSDPatternPool_pushSNP			(RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDChunk, int64_t numberOfSamples, RSDCommandLine_t * RSDCommandLine, void * RSDVcf2ms);
 void			RSDPatternPool_resize 			(RSDPatternPool_t * RSDPatternPool, int64_t setSamples, FILE * fpOut);
 void 			RSDPatternPool_exchangePatterns 	(RSDPatternPool_t * RSDPatternPool, int pID_a, int pID_b);
 void 			RSDPatternPool_exchangePatternsFractions(RSDPatternPool_t * RSDPatternPool, int pID_a, int pID_b);
@@ -640,3 +645,23 @@ typedef struct
 
 void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 
+//RAiSD_Vcf2ms.c
+typedef struct
+{
+	FILE * 		outputFilePtr;
+	int64_t 	memSz;
+	int64_t 	segsites;
+	double * 	positionList;
+	int64_t 	samples;
+	char ** 	data;
+	int64_t		status; // if 0, print ms header and make 1
+
+} RSDVcf2ms_t;
+
+RSDVcf2ms_t * 	RSDVcf2ms_new				(RSDCommandLine_t * RSDCommandLine);
+void 		RSDVcf2ms_free				(RSDVcf2ms_t * RSDVcf2ms, RSDCommandLine_t * RSDCommandLine);
+void 		RSDVcf2ms_appendSNP 			(RSDVcf2ms_t * RSDVcf2ms, RSDCommandLine_t * RSDCommandLine, RSDPatternPool_t * RSDPatternPool, int64_t numberOfSamples);
+void 		RSDVcf2ms_printHeader 			(RSDVcf2ms_t * RSDVcf2ms);
+void 		RSDVcf2ms_printSegsitesAndPositions 	(RSDVcf2ms_t * RSDVcf2ms);
+void 		RSDVcf2ms_printSNPData 			(RSDVcf2ms_t * RSDVcf2ms);
+void		RSDVcf2ms_reset				(RSDVcf2ms_t * RSDVcf2ms);

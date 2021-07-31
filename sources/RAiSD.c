@@ -161,7 +161,7 @@ int main (int argc, char ** argv)
 	RSDCommandLine_printWarnings (RSDCommandLine, argc, argv, (void*)RSDDataset, stdout);
 	RSDCommandLine_printWarnings (RSDCommandLine, argc, argv, (void*)RSDDataset, RAiSD_Info_FP);
 
-	RSDPatternPool_t * RSDPatternPool = RSDPatternPool_new();
+	RSDPatternPool_t * RSDPatternPool = RSDPatternPool_new(RSDCommandLine); // RSDCommandLine here only for vcf2ms conversion
 	RSDPatternPool_init(RSDPatternPool, RSDCommandLine, RSDDataset->numberOfSamples);
 	RSDPatternPool_print(RSDPatternPool, stdout);
 	RSDPatternPool_print(RSDPatternPool, RAiSD_Info_FP);
@@ -171,7 +171,9 @@ int main (int argc, char ** argv)
 
 	RSDMuStat_t * RSDMuStat = RSDMuStat_new();
 	RSDMuStat_setReportName (RSDMuStat, RSDCommandLine, RAiSD_Info_FP);
-	RSDMuStat_loadExcludeTable (RSDMuStat, RSDCommandLine);		
+	RSDMuStat_loadExcludeTable (RSDMuStat, RSDCommandLine);	
+	
+	RSDVcf2ms_t * RSDVcf2ms = RSDVcf2ms_new (RSDCommandLine);	
 
 	int setIndex = -1, setDone = 0, setsProcessedTotal=0;
 
@@ -193,8 +195,8 @@ int main (int argc, char ** argv)
 			RSDMuStat_setReportNamePerSet (RSDMuStat, RSDCommandLine, RAiSD_Info_FP, RSDDataset, RSDCommonOutliers);
 
 			if(RSDCommandLine->setSeparator)
-				fprintf(RSDMuStat->reportFP, "// %s\n", RSDDataset->setID);	
-	
+				fprintf(RSDMuStat->reportFP, "// %s\n", RSDDataset->setID);
+
 			RSDMuStat_init (RSDMuStat, RSDCommandLine);
 			RSDMuStat_excludeRegion (RSDMuStat, RSDDataset);
 
@@ -230,7 +232,7 @@ int main (int argc, char ** argv)
 			RSDPatternPool->lutMap =  RSDLutMap_new();
 			RSDLutMap_init (RSDPatternPool->lutMap, RSDDataset->setSamples);
 #endif
-			RSDPatternPool_pushSNP (RSDPatternPool, RSDChunk, RSDDataset->setSamples);
+			RSDPatternPool_pushSNP (RSDPatternPool, RSDChunk, RSDDataset->setSamples, RSDCommandLine, (void*)RSDVcf2ms);
 
 			int sitesloaded = 0;
 			int patternsloaded = 0;
@@ -240,20 +242,31 @@ int main (int argc, char ** argv)
 			{
 				RSDChunk->chunkID++;
 
+				if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT && RSDChunk->chunkID!=0)
+				{
+					fprintf(stderr, "\nERROR: Insufficient memory size provided through -Q for VCF to ms conversion!\n\n");
+					exit(0);
+				}
+
 				int poolFull = 0;
 
 				// SNP processing
 				while(!poolFull && !setDone) 
 				{
 					setDone = RSDDataset_getNextSNP(RSDDataset, RSDPatternPool, RSDChunk, RSDCommandLine, RSDDataset->setRegionLength, RSDCommandLine->maf, RAiSD_Info_FP);
-					poolFull = RSDPatternPool_pushSNP (RSDPatternPool, RSDChunk, RSDDataset->setSamples); 
+					poolFull = RSDPatternPool_pushSNP (RSDPatternPool, RSDChunk, RSDDataset->setSamples, RSDCommandLine, (void*)RSDVcf2ms); 
 				}
 	
 				RSDPatternPool_assessMissing (RSDPatternPool, RSDDataset->setSamples);
 
 				// version 2.4, for ms
 				if(!strcmp(RSDDataset->inputFileFormat, "ms"))
+				{
+					//printf("%d - %d vs %d\n", RSDChunk->chunkID, (int)RSDDataset->setSNPs, (int)RSDDataset->preLoadedsetSNPs);
+					//fflush(stdout);
+
 					assert((uint64_t)RSDDataset->setSNPs==RSDDataset->preLoadedsetSNPs);
+				}
 
 #ifdef _PTIMES
 				clock_gettime(CLOCK_REALTIME, &requestStartMu);
@@ -333,6 +346,21 @@ int main (int argc, char ** argv)
 				if(RSDMuStat->muMax>=(float)tpr_thres)
 					tpr_scr += 1.0;
 
+			// VCF2MS
+			if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT)
+			{
+				if(RSDVcf2ms->status==0)
+				{
+					RSDVcf2ms->status=1;
+					RSDVcf2ms_printHeader (RSDVcf2ms);
+				}
+
+				RSDVcf2ms_printSegsitesAndPositions (RSDVcf2ms);
+				RSDVcf2ms_printSNPData (RSDVcf2ms);
+
+				RSDVcf2ms_reset (RSDVcf2ms);
+			}
+
 			if(setIndex == setIndexValid)
 				break;
 		}			
@@ -392,6 +420,15 @@ int main (int argc, char ** argv)
 
 	fflush(stdout);
 	fflush(RAiSD_Info_FP);
+
+	//if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT)
+	//{
+	//	fclose(RSDVcf2ms->outputFilePtr);
+
+	//	//TODO free memory here
+	//}
+
+	RSDVcf2ms_free (RSDVcf2ms, RSDCommandLine);
 
 	RSDPlot_removeRscript(RSDCommandLine, RSDPLOT_BASIC_MU);
 

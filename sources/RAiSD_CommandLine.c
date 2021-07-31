@@ -75,6 +75,9 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t[-H STRING]\n");
 	fprintf(fp, "\t[-E STRING]\n");
 
+	fprintf(fp, "\n\t--- VCF-to-MS CONVERSION PARAMETERS\n\n");
+	fprintf(fp, "\t[-Q INTEGER]\n");	
+
 	fprintf(fp, "\n\t--- COMMON-OUTLIER ANALYSIS\n\n");
 	fprintf(fp, "\t[-CO STRING INTEGER INTEGER] or [-CO STRING INTEGER INTEGER STRING INTEGER INTEGER]\n");
 	fprintf(fp, "\t[-COT FLOAT]\n");
@@ -125,11 +128,14 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t-b\tIndicates that the input file is in mbs format.\n");
 	fprintf(fp, "\t-a\tProvides a seed for the random number generator.\n");	
 
-	fprintf(fp, "\n\t--- FASTA-to-VCF CONVERSION PARAMETERS\n\n");
+	fprintf(fp, "\n\t--- FASTA-to-VCF CONVERSION\n\n");
 	fprintf(fp, "\t-C\tProvides the outgroup to be used for the ancestral states (REF field in VCF). The first ingroup sequence\n\t\tis used if the outgroup is not given or found.\n");
 	fprintf(fp, "\t-C2\tProvides a second outgroup to be used for the ancestral states (REF field in VCF).\n");
 	fprintf(fp, "\t-H\tProvides the chromosome name (CHROM field in VCF) to overwrite default \"chrom\" string.\n");
 	fprintf(fp, "\t-E\tConverts input FASTA to VCF and terminates execution without further processing.\n");
+
+	fprintf(fp, "\n\t--- VCF-to-MS CONVERSION\n\n");
+	fprintf(fp, "\t-Q\tConverts an input VCF to ms and provides the memory size (in MB) to be allocated for the conversion. Requires -L.\n");	
 
 	fprintf(fp, "\n\t--- COMMON-OUTLIER ANALYSIS\n\n");
 	fprintf(fp, "\t-CO\tProvides the report name (and column indices for positions and scores) to be used for common-outlier analysis.\n\t\tTo perform a common-outlier analysis using RAiSD and SweeD, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2\".\n\t\tThe SweeD report must not contain a header. If you have already run RAiSD on your data and only want to perform a\n\t\tcommon-outlier analysis, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2 RAiSD_Report.RAiSD-Run-Name 1 X\",\n\t\twhere X is the index of the column you want to use depending on the RAiSD report.\n\t\tTo use the mu-statistic, set Y=2 if RAiSD was invoked with the default parameters, or set Y=7 if -R was explicitly\n\t\tprovided or implicitly activated through some other command-line parameter. Again, the RAiSD report must not contain\n\t\ta header.\n");
@@ -172,6 +178,10 @@ void RSDVersions(FILE * fp)
 	fprintf(fp, " %d. RAiSD v%d.%d (Apr 8, 2020): -G parameter to specify the grid size\n", releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %d. RAiSD v%d.%d (Apr 22, 2020): -CO, -COT, -COD parameters for common-outlier analysis between RAiSD and SweeD, install script for gsl\n", releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %d. RAiSD v%d.%d (Aug 6, 2020): fixed bug in parsing one-character VCF sample names\n", releaseIndex++, majorIndex, minorIndex++);
+
+	majorIndex++; minorIndex=0;
+	
+	fprintf(fp, " %d. RAiSD v%d.%d (Jul 31, 2021): -Q for VCF to ms conversion\n", releaseIndex++, majorIndex, minorIndex++);
 
 }
 
@@ -221,6 +231,8 @@ void RSDCommandLine_init(RSDCommandLine_t * RSDCommandLine)
 	strncpy(RSDCommandLine->outgroupName2, "\0", STRING_SIZE);
 	strncpy(RSDCommandLine->chromNameVCF, "chrom", STRING_SIZE);
 	RSDCommandLine->fasta2vcfMode = FASTA2VCF_CONVERT_n_PROCESS;
+	RSDCommandLine->vcf2msExtra = 0;
+	RSDCommandLine->vcf2msMemsize = PATTERNPOOL_SIZE;
 	RSDCommandLine->gridSize = -1;
 	RSDCommandLine->createCOPlot = 0;
 	strncpy(RSDCommandLine->reportFilenameSweeD, "\0", STRING_SIZE);
@@ -973,6 +985,32 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			continue;
 		}
 
+		if(!strcmp(argv[i], "-Q")) 
+		{ 
+			flagCheck (argv, i, flagVector, 25);
+
+			RSDCommandLine->vcf2msExtra = VCF2MS_CONVERT;
+
+			if (i!=argc-1 && argv[i+1][0]!='-')
+			{
+				int64_t memsz = (int64_t)atoi(argv[++i]);
+				RSDCommandLine->vcf2msMemsize = (int64_t) memsz;
+
+				if(RSDCommandLine->vcf2msMemsize<1)
+				{
+					fprintf(stderr, "\nERROR: Invalid memory size for VCF to ms conversion (valid: >=1 MB)\n\n");
+					exit(0);
+				}
+			}
+			else
+			{
+				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
+				exit(0);	
+			}
+
+			continue;
+		}
+
 
 		/*if(!strcmp(argv[i], "-set")) 
 		{ 
@@ -1037,6 +1075,12 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	if(flagVector[M_FLAG_INDEX] && !(flagVector[Y_FLAG_INDEX]))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -y, which is required when -M is used.\n\n");
+		exit(0);
+	}
+
+	if(RSDCommandLine->vcf2msExtra==VCF2MS_CONVERT && !(flagVector[L_FLAG_INDEX]))
+	{
+		fprintf(stderr, "\nERROR: Missing input parameter -L, which is required when -Q is used.\n\n");
 		exit(0);
 	}
 
@@ -1135,14 +1179,20 @@ void RSDCommandLine_printWarnings (RSDCommandLine_t * RSDCommandLine, int argc, 
 	{
 		if(!strcmp(argv[i], "-L") && !strcmp(myRSDDataset->inputFileFormat, "vcf.gz")) 
 		{ 
-			fprintf(fpOut, "\n WARNING: Argument -L is not to be used with vcf.gz files and will be ignored!\n");
-			fflush(fpOut);
+			if(RSDCommandLine->vcf2msExtra!=VCF2MS_CONVERT) // -L is not be used with VCF in regular exec. mode, it is required for vcf2ms conversion
+			{
+				fprintf(fpOut, "\n WARNING: Argument -L is not to be used with vcf.gz files and will be ignored!\n");
+				fflush(fpOut);
+			}
 		}
 
 		if(!strcmp(argv[i], "-L") && !strcmp(myRSDDataset->inputFileFormat, "vcf")) 
 		{ 
-			fprintf(fpOut, "\n WARNING: Argument -L is not to be used with vcf files and will be ignored!\n");
-			fflush(fpOut);
+			if(RSDCommandLine->vcf2msExtra!=VCF2MS_CONVERT) // -L is not be used with VCF in regular exec. mode, it is required for vcf2ms conversion
+			{
+				fprintf(fpOut, "\n WARNING: Argument -L is not to be used with vcf files and will be ignored!\n");
+				fflush(fpOut);
+			}
 		}
 
 		if(!strcmp(argv[i], "-B") && !strcmp(myRSDDataset->inputFileFormat, "ms")) 

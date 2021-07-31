@@ -29,13 +29,20 @@ struct timespec requestEndOoC;
 double TotalOoCTime;
 #endif
 
-RSDPatternPool_t * RSDPatternPool_new(void)
+RSDPatternPool_t * RSDPatternPool_new(RSDCommandLine_t * RSDCommandLine)
 {
 	RSDPatternPool_t * pp = NULL;
 	pp = (RSDPatternPool_t *) rsd_malloc(sizeof(RSDPatternPool_t));
 	assert(pp!=NULL);
 
 	pp->memorySize = PATTERNPOOL_SIZE;
+
+	if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT)
+	{
+		pp->memorySize = (int)RSDCommandLine->vcf2msMemsize;
+		assert(pp->memorySize>=1);
+	}
+	
 	pp->maxSize = -1;
 	pp->patternSize = -1;
 	pp->dataSize = -1;
@@ -694,8 +701,10 @@ void RSDPatternPool_reset (RSDPatternPool_t * RSDPatternPool, int64_t numberOfSa
 	}
 }
 
-int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDChunk, int64_t numberOfSamples)
+int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDChunk, int64_t numberOfSamples, RSDCommandLine_t * RSDCommandLine, void * RSDVcf2ms_tmp)
 {
+	RSDVcf2ms_t * RSDVcf2ms = (RSDVcf2ms_t*) RSDVcf2ms_tmp;
+
 #ifdef _PTIMES
 	clock_gettime(CLOCK_REALTIME, &requestStartOoC);
 #endif
@@ -704,6 +713,8 @@ int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDC
 		return 0;
 
 	int i, j, lcnt=0, acnt=0, vcnt=0, avcnt=0, match=0;
+
+	RSDVcf2ms_appendSNP (RSDVcf2ms, RSDCommandLine, RSDPatternPool, numberOfSamples);
 
 	//init compact
 	for(i=0;i<RSDPatternPool->patternSize;i++)
