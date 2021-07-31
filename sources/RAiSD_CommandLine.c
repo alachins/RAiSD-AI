@@ -69,13 +69,13 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t[-b]\n");
 	fprintf(fp, "\t[-a INTEGER]\n");
 
-	fprintf(fp, "\n\t--- FASTA-to-VCF CONVERSION PARAMETERS\n\n");
+	fprintf(fp, "\n\t--- FASTA-to-VCF CONVERSION\n\n");
 	fprintf(fp, "\t[-C STRING]\n");
 	fprintf(fp, "\t[-C2 STRING]\n");
 	fprintf(fp, "\t[-H STRING]\n");
 	fprintf(fp, "\t[-E STRING]\n");
 
-	fprintf(fp, "\n\t--- VCF-to-MS CONVERSION PARAMETERS\n\n");
+	fprintf(fp, "\n\t--- VCF-to-MS CONVERSION\n\n");
 	fprintf(fp, "\t[-Q INTEGER]\n");	
 
 	fprintf(fp, "\n\t--- COMMON-OUTLIER ANALYSIS\n\n");

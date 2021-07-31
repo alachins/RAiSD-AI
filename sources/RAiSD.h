@@ -34,10 +34,10 @@
 #include "zlib.h"
 #endif
 
-#define MAJOR_VERSION 2
-#define MINOR_VERSION 9
-#define RELEASE_MONTH "August"
-#define RELEASE_YEAR 2020
+#define MAJOR_VERSION 3
+#define MINOR_VERSION 0
+#define RELEASE_MONTH "July"
+#define RELEASE_YEAR 2021
 
 /*Testing*/
 extern uint64_t selectionTarget;
