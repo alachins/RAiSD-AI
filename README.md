@@ -89,11 +89,9 @@ This command should be used from within the installation directory (raisd-master
 Test Run
 --------
 
-To verify that RAiSD is installed correctly, a test run can be done with the following commands. These commands are going to download a dataset (one of the many that we used for evaluation purposes) and execute RAiSD to process 1,000 simulated sets of SNPs (genomic region size = 100000 bp, weak bottleneck, selective sweep at the center of the region).
+To verify that RAiSD is installed correctly, a test run can be done with the following command. This command is going to execute RAiSD to process 100 simulated sets of SNPs (genomic region size = 100000 bp, weak bottleneck, selective sweep at the center of the region).
     
-    $ wget 139.91.162.50/raisd_data/d1.tar.gz
-    $ tar -xvzf d1.tar.gz
-    $ ./RAiSD -n test_run -I d1/msselection1.out -L 100000
+    $ ./RAiSD -n test_run -I datasets/d1sweep.ms -L 100000
     
 Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run are generated. 
     
