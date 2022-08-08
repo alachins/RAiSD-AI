@@ -35,9 +35,9 @@
 #endif
 
 #define MAJOR_VERSION 3
-#define MINOR_VERSION 0
-#define RELEASE_MONTH "July"
-#define RELEASE_YEAR 2021
+#define MINOR_VERSION 1
+#define RELEASE_MONTH "August"
+#define RELEASE_YEAR 2022
 
 /*Testing*/
 extern uint64_t selectionTarget;
@@ -266,6 +266,9 @@ typedef struct
 	int		scoreIndexRAiSD; // Flag: CO
 	char		commonOutliersThreshold[STRING_SIZE]; // Flag: COT
 	double		commonOutliersMaxDistance; // Flag: COD
+	float 		muVarExp; // Flag: VAREXP
+	float		muSfsExp; // Flag: SFSEXP
+	float		muLdExp; // Flag: LDEXP
 
 } RSDCommandLine_t;
 
@@ -277,6 +280,7 @@ void 			RSDCommandLine_init			(RSDCommandLine_t * RSDCommandLine);
 void 			RSDCommandLine_load			(RSDCommandLine_t * RSDCommandLine, int argc, char ** argv);
 void 			RSDCommandLine_print			(int argc, char ** argv, FILE * fpOut);
 void 			RSDCommandLine_printWarnings 		(RSDCommandLine_t * RSDCommandLine, int argc, char ** argv, void * RSDDataset, FILE * fpOut);
+void			RSDCommandLine_printExponents 		(RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 
 // RAiSD_Chunk.c
 typedef struct
@@ -610,9 +614,9 @@ void 		RSDMuStat_free 			(RSDMuStat_t * mu);
 void 		RSDMuStat_init 			(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
 void 		RSDMuStat_setReportName 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 		RSDMuStat_setReportNamePerSet 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, FILE * fpOut, RSDDataset_t * RSDDataset, RSDCommonOutliers_t * RSDCommonOutliers);
-extern void	(*RSDMuStat_scanChunk) 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
-void 		RSDMuStat_scanChunkBinary	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
-void 		RSDMuStat_scanChunkWithMask	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
+extern void	(*RSDMuStat_scanChunk) 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 		RSDMuStat_scanChunkBinary	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 		RSDMuStat_scanChunkWithMask	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 extern float   	getPatternCount			(RSDPatternPool_t * RSDPatternPool, int * pCntVec, int offset, int * patternID, int p0, int p1, int p2, int p3, int * pcntl, int * pcntr, int * pcntexll, int * pcntexlr);
 void		RSDMuStat_loadExcludeTable 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
 void		RSDMuStat_excludeRegion 	(RSDMuStat_t * RSDMuStat, RSDDataset_t * RSDDataset);

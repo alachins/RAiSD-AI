@@ -154,6 +154,9 @@ int main (int argc, char ** argv)
 	RSDDataset_init(RSDDataset, RSDCommandLine, RAiSD_Info_FP); 
 	RSDDataset_print(RSDDataset, RSDCommandLine, stdout);
 	RSDDataset_print(RSDDataset, RSDCommandLine, RAiSD_Info_FP);
+	
+	RSDCommandLine_printExponents (RSDCommandLine, stdout);
+	RSDCommandLine_printExponents (RSDCommandLine, RAiSD_Info_FP);
 
 	RSDPlot_printRscriptVersion (RSDCommandLine, stdout);
 	RSDPlot_printRscriptVersion (RSDCommandLine, RAiSD_Info_FP);
@@ -272,7 +275,7 @@ int main (int argc, char ** argv)
 				clock_gettime(CLOCK_REALTIME, &requestStartMu);
 #endif
 				// Compute Mu statistic
-				RSDMuStat_scanChunk (RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine);
+				RSDMuStat_scanChunk (RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RAiSD_Info_FP);
 #ifdef _PTIMES
 				clock_gettime(CLOCK_REALTIME, &requestEndMu);
 				double MuTime = (requestEndMu.tv_sec-requestStartMu.tv_sec)+ (requestEndMu.tv_nsec-requestStartMu.tv_nsec) / BILLION;

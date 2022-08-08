@@ -26,9 +26,9 @@ float 	getPatternCounts (int winMode, RSDMuStat_t * RSDMuStat, int sizeL, int si
 float 	getCrossLD 			(RSDPatternPool_t * pp, int p0, int p1, int p2, int p3, int samples);
 float 	getRegionLD 			(RSDPatternPool_t * pp, int p0, int p1, int samples);
 float 	pwLD 				(RSDPatternPool_t * pp, int p1, int p2, int samples);
-void	(*RSDMuStat_scanChunk) 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
-void 	RSDMuStat_scanChunkBinary	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
-void 	RSDMuStat_scanChunkWithMask	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
+void	(*RSDMuStat_scanChunk) 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 	RSDMuStat_scanChunkBinary	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 	RSDMuStat_scanChunkWithMask	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 	(*RSDMuStat_storeOutput) 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
 void 	RSDMuStat_output2FileSimple 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
 void 	RSDMuStat_output2FileFull 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
@@ -3171,10 +3171,11 @@ void RSDMuStat_writeBuffer2File (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSD
 
 #ifdef _REF
 // Default SW implementation
-void RSDMuStat_scanChunkBinary (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine)
+void RSDMuStat_scanChunkBinary (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut)
 {
 	assert(RSDCommandLine!=NULL);
 	assert(RSDPatternPool!=NULL);
+	assert(fpOut!=NULL);
 
 	RSDPatternPool = RSDPatternPool;
 
@@ -3263,7 +3264,14 @@ void RSDMuStat_scanChunkBinary (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, 
 		}
 
 		// Mu
-		mu =  muVar * muSfs * muLd * isValid;
+		mu =  powf(muVar, RSDCommandLine->muVarExp) * powf(muSfs, RSDCommandLine->muSfsExp) * powf(muLd, RSDCommandLine->muLdExp) * isValid;
+		
+		if(isinf(mu)==1)
+		{
+			fprintf(fpOut, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents. \n\n");
+			fprintf(stderr, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents.\n\n");
+			exit(0);
+		}
 
 		// MuVar Max
 		if (muVar > RSDMuStat->muVarMax)
@@ -3306,10 +3314,11 @@ void RSDMuStat_scanChunkBinary (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, 
 #endif
 #endif
 
-void RSDMuStat_scanChunkWithMask (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine)
+void RSDMuStat_scanChunkWithMask (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut)
 {
 	assert(RSDCommandLine!=NULL);
 	assert(RSDPatternPool!=NULL);
+	assert(fpOut!=NULL);
 
 	int i, j, size = (int)RSDChunk->chunkSize;
 
@@ -3433,7 +3442,15 @@ void RSDMuStat_scanChunkWithMask (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk
 		}
 
 		// Mu
-		mu =  muVar * muSfs * muLd * isValid;
+		mu =  powf(muVar, RSDCommandLine->muVarExp) * powf(muSfs, RSDCommandLine->muSfsExp) * powf(muLd, RSDCommandLine->muLdExp) * isValid;
+		
+		if(isinf(mu)==1)
+		{
+			fprintf(fpOut, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents. \n\n");
+			fprintf(stderr, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents.\n\n");
+			exit(0);
+		}
+
 
 		// MuVar Max
 		if (muVar > RSDMuStat->muVarMax)

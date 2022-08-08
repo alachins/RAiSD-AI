@@ -47,6 +47,9 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t[-w INTEGER]\n");
 	fprintf(fp, "\t[-c INTEGER]\n");
 	fprintf(fp, "\t[-G INTEGER]\n");
+	fprintf(fp, "\t[-VAREXP FLOAT]\n");
+	fprintf(fp, "\t[-SFSEXP FLOAT]\n");
+	fprintf(fp, "\t[-LDEXP FLOAT]\n");
 
 	fprintf(fp, "\n\t--- STANDARD OUTPUT and REPORTS\n\n");
 	fprintf(fp, "\t[-f]\n");
@@ -106,6 +109,9 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t-w\tProvides the window size (integer value). The default value is 50 (empirically determined).\n");
 	fprintf(fp, "\t-c\tProvides the slack for the SFS edges to be used for the calculation of mu_SFS. The default value is 1\n\t\t(singletons and S-1 snp class, where S is the sample size).\n");
 	fprintf(fp, "\t-G\tProvides the grid size to specify the total number of evaluation points across the data.\n\t\tWhen used, RAiSD reports mu statistic scores at equidistant locations between the first and last SNPs.\n");
+	fprintf(fp, "\t-VAREXP\tProvides the exponent for the mu-var factor (default: 1.0).\n");
+	fprintf(fp, "\t-SFSEXP\tProvides the exponent for the mu-sfs factor (default: 1.0).\n");
+	fprintf(fp, "\t-LDEXP\tProvides the exponent for the mu-ld factor (default: 1.0).\n");
 
 	fprintf(fp, "\n\t--- STANDARD OUTPUT and REPORTS\n\n");
 	fprintf(fp, "\t-f\tOverwrites existing run files under the same run ID.\n");
@@ -182,6 +188,7 @@ void RSDVersions(FILE * fp)
 	majorIndex++; minorIndex=0;
 	
 	fprintf(fp, " %d. RAiSD v%d.%d (Jul 31, 2021): -Q for VCF to ms conversion\n", releaseIndex++, majorIndex, minorIndex++);
+	fprintf(fp, " %d. RAiSD v%d.%d (Aug 8, 2022): -VAREXP, -SFSEXP, -LDEXP for exponentiation of the mu-statistic factors\n", releaseIndex++, majorIndex, minorIndex++);
 
 }
 
@@ -242,7 +249,10 @@ void RSDCommandLine_init(RSDCommandLine_t * RSDCommandLine)
 	RSDCommandLine->positionIndexRAiSD = -1;
 	RSDCommandLine->scoreIndexRAiSD = -1;
 	strcpy(RSDCommandLine->commonOutliersThreshold, "0.05");
-	RSDCommandLine->commonOutliersMaxDistance = 1.0;
+	RSDCommandLine->commonOutliersMaxDistance = 1.0;	
+	RSDCommandLine->muVarExp = 1.0;
+	RSDCommandLine->muSfsExp = 1.0;
+	RSDCommandLine->muLdExp = 1.0;
 }
 
 void flagCheck (char ** argv, int i, int * flagVector, int flagIndex)
@@ -1010,6 +1020,75 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 
 			continue;
 		}
+		
+		if(!strcmp(argv[i], "-VAREXP")) 
+		{ 
+			flagCheck (argv, i, flagVector, 26);
+
+			if (i!=argc-1 && argv[i+1][0]!='-')
+			{
+				RSDCommandLine->muVarExp = atof(argv[++i]);				
+
+				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
+				{
+					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
+					exit(0);
+				}
+			}
+			else
+			{
+				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
+				exit(0);	
+			}
+
+			continue;
+		}
+		
+		if(!strcmp(argv[i], "-SFSEXP")) 
+		{ 
+			flagCheck (argv, i, flagVector, 27);
+
+			if (i!=argc-1 && argv[i+1][0]!='-')
+			{
+				RSDCommandLine->muSfsExp = atof(argv[++i]);				
+
+				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
+				{
+					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
+					exit(0);
+				}
+			}
+			else
+			{
+				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
+				exit(0);	
+			}
+
+			continue;
+		}
+		
+		if(!strcmp(argv[i], "-LDEXP")) 
+		{ 
+			flagCheck (argv, i, flagVector, 28);
+
+			if (i!=argc-1 && argv[i+1][0]!='-')
+			{
+				RSDCommandLine->muLdExp = atof(argv[++i]);				
+
+				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
+				{
+					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
+					exit(0);
+				}
+			}
+			else
+			{
+				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
+				exit(0);	
+			}
+
+			continue;
+		}
 
 
 		/*if(!strcmp(argv[i], "-set")) 
@@ -1201,5 +1280,18 @@ void RSDCommandLine_printWarnings (RSDCommandLine_t * RSDCommandLine, int argc, 
 			fflush(fpOut);
 		}
 	}
+}
+
+void RSDCommandLine_printExponents (RSDCommandLine_t * RSDCommandLine, FILE * fpOut)
+{
+	if(fpOut==NULL)
+		return;
+
+	assert(RSDCommandLine!=NULL);
+	
+	fprintf(fpOut, " var-exp: %.1f\n", RSDCommandLine->muVarExp);
+	fprintf(fpOut, " sfs-exp: %.1f\n", RSDCommandLine->muSfsExp);
+	fprintf(fpOut, " ld-exp:  %.1f\n", RSDCommandLine->muLdExp);
+
 }
 
