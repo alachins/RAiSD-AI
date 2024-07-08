@@ -73,9 +73,9 @@ Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be foun
 Test Run
 --------
 
-To verify that RAiSD is installed correctly, a test run can be done with the following command. This command is going to execute RAiSD to process 100 simulated sets of SNPs (genomic region size = 100000 bp, weak bottleneck, selective sweep at the center of the region).
+To verify that RAiSD-AI is installed correctly, a test run can be done with the following command. This command is going to execute RAiSD to process 10 simulated sets of SNPs (genomic region size = 100000 bp, weak bottleneck, selective sweep at the center of the region).
     
-    $ ./RAiSD -n test_run -I datasets/d1sweep.ms -L 100000
+    $ ./RAiSD-AI -n test_run -I datasets/test/msselection1_10sims.out -L 100000 -O
     
 Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run are generated. 
     
