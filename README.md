@@ -33,7 +33,10 @@ URL: https://ieeexplore.ieee.org/abstract/document/8533493
 URL: https://dl.acm.org/doi/10.1145/3364225
 
 4. Population genomics insights into the recent evolution of SARS-CoV-2 ([PDF](https://www.biorxiv.org/content/10.1101/2020.04.21.054122v1.full.pdf))  
-URL: https://doi.org/10.1101/2020.04.21.054122  
+URL: https://doi.org/10.1101/2020.04.21.054122
+
+5. Genome-wide scans for selective sweeps using convolutional neural networks ([PDF](https://academic.oup.com/bioinformatics/article-pdf/39/Supplement_1/i194/50757064/btad265.pdf))
+URL: https://doi.org/10.1093/bioinformatics/btad265
 
 
 Changes to the μ statistic (May 2019)
