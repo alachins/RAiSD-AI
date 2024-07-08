@@ -1,5 +1,5 @@
 
-[RAiSD: software to detect positive selection based on multiple signatures of a selective sweep and SNP vectors](https://www.nature.com/articles/s42003-018-0085-8)
+[RAiSD-AI: software to train, test, and use Convolutional Neural Networks for selective sweep detection]
 ===============================================
 
 Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavlidisp@gmail.com)
