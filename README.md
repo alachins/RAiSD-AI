@@ -1,5 +1,5 @@
 
-[RAiSD-AI: software to train, test, and use Convolutional Neural Networks for selective sweep detection]
+RAiSD-AI: software to train, test, and use Convolutional Neural Networks for selective sweep detection
 ===============================================
 
 Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavlidisp@gmail.com)
