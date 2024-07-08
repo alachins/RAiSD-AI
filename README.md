@@ -57,8 +57,8 @@ Download and Compile
 
 The following commands can be used to download and compile the source code. 
 
-    $ mkdir RAiSD
-    $ cd RAiSD
+    $ mkdir RAiSD-AI
+    $ cd RAiSD-AI
     $ wget https://github.com/alachins/raisd/archive/master.zip
     $ unzip master.zip
     $ cd raisd-master
