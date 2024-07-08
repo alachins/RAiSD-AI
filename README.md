@@ -38,7 +38,7 @@ URL: https://doi.org/10.1101/2020.04.21.054122
 5. Genome-wide scans for selective sweeps using convolutional neural networks ([PDF](https://academic.oup.com/bioinformatics/article-pdf/39/Supplement_1/i194/50757064/btad265.pdf))   
 URL: https://doi.org/10.1093/bioinformatics/btad265
 
-6. SweepNet: A Lightweight CNN Architecture for the Classification of Adaptive Genomic Regions ([PDF](https://dl.acm.org/doi/pdf/10.1145/3592979.3593411))
+6. SweepNet: A Lightweight CNN Architecture for the Classification of Adaptive Genomic Regions ([PDF](https://dl.acm.org/doi/pdf/10.1145/3592979.3593411))       
 URL: https://dl.acm.org/doi/pdf/10.1145/3592979.3593411
 
 
