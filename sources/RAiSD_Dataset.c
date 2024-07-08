@@ -393,7 +393,6 @@ void RSDDataset_init (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLi
 
 		int vcfCheckFlag = VCFFileCheckAndReorder ((void*)RSDDataset, RSDCommandLine->inputFileName, RSDCommandLine->overwriteOutput, fpOut);
 		assert(vcfCheckFlag==VCF_FILE_CHECK_PASS);
-		vcfCheckFlag = vcfCheckFlag;
 
 		fclose(RSDDataset->inputFilePtr);
 	}
@@ -488,11 +487,44 @@ void RSDDataset_reportMissing (RSDDataset_t * RSDDataset, FILE * fpOut)
 void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut)
 {
 	assert(RSDDataset!=NULL);
+	
+	int newline_y = 1;
 
 	if(fpOut!=NULL)
 	{
-		fprintf(fpOut, " Samples: %d", RSDDataset->numberOfSamples);
-			
+
+#ifdef _RSDAI	
+		switch (RSDCommandLine->opCode)
+		{
+			case OP_DEF:
+				fprintf(fpOut, " Sample size         :\t%d", RSDDataset->numberOfSamples);
+				newline_y = 1;
+				break;
+				
+			case OP_CREATE_IMAGES:
+				fprintf(fpOut, " Sample size         :\t%d (image height)", RSDDataset->numberOfSamples);
+				newline_y = 1;
+				break;
+				
+			case OP_TRAIN_CNN:
+				newline_y = 1;				
+				break;
+				
+			case OP_TEST_CNN:
+				newline_y = 1;				
+				break;
+				
+			case OP_USE_CNN:
+				newline_y = 0;				
+				break;
+				
+			default:
+				assert(0);
+				break;	
+		}		
+#else
+		fprintf(fpOut, " Sample size         :\t%d", RSDDataset->numberOfSamples);
+#endif			
 		if(RSDDataset->sampleValidListSize!=ALL_SAMPLES_VALID)
 		{
 			fprintf(fpOut, " [Total: %d, Not found: %d, Requested %d]", RSDDataset->numberOfSamplesVCF, RSDDataset->sampleValidListSize-RSDDataset->numberOfSamples, RSDDataset->sampleValidListSize);	
@@ -500,11 +532,13 @@ void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandL
 
 		}
 
-		fprintf(fpOut, "\n");
-		if(!strcmp(RSDDataset->inputFileFormat, "ms"))
-			fprintf(fpOut, " Region:  %lu bp\n", RSDCommandLine->regionLength);
+		if(newline_y)
+			fprintf(fpOut, "\n");
 
-		fprintf(fpOut, " Format:  %s\n", RSDDataset->inputFileFormat);
+		if(!strcmp(RSDDataset->inputFileFormat, "ms"))
+			fprintf(fpOut, " Region length       :\t%lu bp\n", RSDCommandLine->regionLength);
+
+		fprintf(fpOut, " Dataset format      :\t%s\n", RSDDataset->inputFileFormat);
 
 		fflush(fpOut);
 	}
@@ -587,8 +621,6 @@ int RSDDataset_getValidSampleList_ms (RSDDataset_t * RSDDataset)
 {
 	assert(RSDDataset!=NULL);
 
-	RSDDataset = RSDDataset;
-
 	return 0;
 }
 
@@ -597,7 +629,6 @@ int RSDDataset_getNumberOfSamples_ms (RSDDataset_t * RSDDataset)
 	char tstring[STRING_SIZE];
 	int rcnt = fscanf(RSDDataset->inputFilePtr, "%s", tstring); // ms/mssel/msHOT/command(if mbs)
 	assert(rcnt==1);
-	rcnt = rcnt;
 	
 	rcnt = fscanf(RSDDataset->inputFilePtr, "%s", tstring); // samples if !mbs
 	assert(rcnt==1);
@@ -635,7 +666,6 @@ int RSDDataset_getFirstSNP_ms (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSD
 
 	int rcnt = fscanf(RSDDataset->inputFilePtr, "%s", tstring);
 	assert(rcnt==1);
-	rcnt = rcnt;
 
 	tstring[2] = '\0'; // for all ms-like keep just // (required for mbs)
 
@@ -803,8 +833,7 @@ int RSDDataset_getNextSNP_ms (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSDP
 
 	int rcnt = fscanf(RSDDataset->inputFilePtr, "%s", tstring);
 	assert(rcnt==1);
-	rcnt = rcnt;
-
+	
 	double valf = atof(tstring);
 	valf = RSDDataset->inputFileIsMBS==1?valf:valf*(double)length;
 
@@ -898,8 +927,7 @@ char RSDDataset_goToNextSet_vcf_gz (RSDDataset_t * RSDDataset)
 		{
 			int rcnt = gzscanf(RSDDataset->inputFilePtrGZ, tstring);
 			assert(rcnt==1);
-			rcnt = rcnt;
-
+			
 			if(strcmp(tstring, RSDDataset->setID))
 			{
 				strcpy(RSDDataset->setID, tstring);
@@ -1275,8 +1303,8 @@ void RSDDataset_getSetRegionLength_vcf_gz (RSDDataset_t * RSDDataset, RSDCommand
 				fprintf(fpOut, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Unzip and rerun using -o to order the input file!\n\n", setSizeTmp);
 				fflush(fpOut);
 
-				fprintf(stdout, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Unzip and rerun using -o to order the input file!\n\n", setSizeTmp);
-				fflush(stdout);
+				fprintf(stderr, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Unzip and rerun using -o to order the input file!\n\n", setSizeTmp);
+				fflush(stderr);
 
 				exit(0);
 			}
@@ -1466,7 +1494,7 @@ int RSDDataset_getNextSNP_vcf_gz (RSDDataset_t * RSDDataset, RSDPatternPool_t * 
 {
 	assert(RSDChunk!=NULL);
 
-	RSDChunk = RSDChunk;
+	//RSDChunk = RSDChunk;
 
 	char tstring[STRING_SIZE];
 	int setDone = 0;
@@ -1723,8 +1751,7 @@ char RSDDataset_goToNextSet_vcf (RSDDataset_t * RSDDataset)
 		{
 			int rcnt = fscanf(RSDDataset->inputFilePtr, "%s", tstring);
 			assert(rcnt==1);
-			rcnt = rcnt;
-
+			
 			if(strcmp(tstring, RSDDataset->setID))
 			{
 				strcpy(RSDDataset->setID, tstring);
@@ -2124,8 +2151,8 @@ void RSDDataset_getSetRegionLength_vcf (RSDDataset_t * RSDDataset, RSDCommandLin
 				fprintf(fpOut, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Rerun using -o to order the input file!\n\n", setSizeTmp);
 				fflush(fpOut);
 
-				fprintf(stdout, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Rerun using -o to order the input file!\n\n", setSizeTmp);
-				fflush(stdout);
+				fprintf(stderr, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Rerun using -o to order the input file!\n\n", setSizeTmp);
+				fflush(stderr);
 
 				exit(0);
 			}
@@ -2236,7 +2263,6 @@ void RSDDataset_getSetRegionLength_vcf (RSDDataset_t * RSDDataset, RSDCommandLin
 
 				if(RSDCommandLine->imputePerSNP==1 || RSDCommandLine->createPatternPoolMask==1)
 				{
-
 					skipSNP = strictPolymorphic_check(incomingSiteDerivedAlleleCount, incomingSiteTotalAlleleCount, &setSitesDiscardedStrictPolymorphicCheckFailed, 0)==1?0:1;
 
 					if(RSDCommandLine->imputePerSNP==1 && (!skipSNP))
@@ -2315,8 +2341,6 @@ int RSDDataset_getNextSNP_vcf (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSD
 {
 	assert(RSDChunk!=NULL);
 
-	RSDChunk = RSDChunk;
-
 	char tstring[STRING_SIZE];
 	int setDone = 0;
 
@@ -2363,7 +2387,7 @@ int RSDDataset_getNextSNP_vcf (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSD
 
 	RSDDataset->setSize++;
 	RSDDataset->setProgress++; // site loaded
-	RSDDataset->setSNPs += 0; // Init to 0 since we dont know yet whether this is a polymorphic one or not
+	RSDDataset->setSNPs += 0; // Init to 0 since we dont yet know whether this is a polymorphic site one or not
 
 	//fgetpos(RSDDataset->inputFilePtr, &(RSDChunk->posPosition)); // not used
 
@@ -2658,3 +2682,23 @@ void RSDDataset_printSiteReport (RSDDataset_t * RSDDataset, FILE * fp, int setIn
 	fflush(fp);
 }
 
+void RSDDataset_writeOutput (RSDDataset_t * RSDDataset, int setIndex, FILE * fpOut)
+{
+	// this function writes dataset-not-processed note to stdout and info file
+	
+	assert(RSDDataset!=NULL);
+	assert(setIndex>=0);
+	assert(fpOut);
+	
+	static int slen[3]={0};
+	
+	slen[0] = getStringLengthString (slen[0], RSDDataset->setID);
+	slen[1] = getStringLengthInt (slen[1], RSDDataset->setSize);
+	slen[2] = getStringLengthInt (slen[2], RSDDataset->setSNPs); 
+	
+	fprintf(fpOut, " %d: Set %*s | Sites %*d | SNPs %*d | Region %lu - NOT PROCESSED \n", setIndex, slen[0], RSDDataset->setID, 
+													slen[1], (int)RSDDataset->setSize, 
+													slen[2], (int)RSDDataset->setSNPs, 
+														 RSDDataset->setRegionLength);						      	
+	fflush(fpOut);	
+}

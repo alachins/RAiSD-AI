@@ -21,23 +21,28 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
 #include <time.h>
 #include <unistd.h>
 #include <math.h>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_spline.h>
-#include <gsl/gsl_interp.h>
+//#include <gsl/gsl_errno.h>
+//#include <gsl/gsl_spline.h>
+//#include <gsl/gsl_interp.h>
+#ifdef _RSDAI
+#include <png.h> // sudo apt-get install libpng-dev and -lpng
+#include <sys/stat.h>
+#endif
 #ifdef _ZLIB
 #include "zlib.h"
 #endif
 
-#define MAJOR_VERSION 3
-#define MINOR_VERSION 1
-#define RELEASE_MONTH "August"
-#define RELEASE_YEAR 2022
+#define MAJOR_VERSION 4
+#define MINOR_VERSION 0
+#define RELEASE_MONTH "July"
+#define RELEASE_YEAR 2024
 
 /*Testing*/
 extern uint64_t selectionTarget;
@@ -56,6 +61,12 @@ extern float * scr_svec;
 extern double tpr_thres;
 extern double tpr_scr;
 extern int setIndexValid;
+#ifdef _RSDAI
+extern double NN_Accum;
+extern double NN_Success;
+extern double compNN_Accum;
+extern double compNN_Success;
+#endif
 /**/
 
 #ifdef _PTIMES
@@ -76,7 +87,7 @@ extern double TotalMuTime;
 #define STRING_SIZE 8192
 #define PATTERNPOOL_SIZE 8 // MBs without the mask (actual memfootprint approx. double)
 #define	PATTERNPOOL_SIZE_MASK_FACTOR 2
-#define CHUNK_MEMSIZE_AND_INCREMENT 1024 // sites
+#define CHUNK_MEMSIZE_AND_INCREMENT 1024 // 1024 sites
 #define POSITIONLIST_MEMSIZE_AND_INCREMENT 1024 // positions
 #define MULTI_STEP_PARSING 0
 #define SINGLE_STEP_PARSING 1 // set this to 0 to deactivate completely
@@ -122,6 +133,20 @@ extern double TotalMuTime;
 
 #define CO_FLAG_INDEX 22
 
+#ifdef _RSDAI
+#define GRID_FLAG_INDEX 21
+#define IMG_TARGET_SITE_FLAG_INDEX 31
+#define IMG_CLASS_LABEL_FLAG_INDEX 33
+#define MDL_PATH_FLAG_INDEX 34
+#define CL_TEST_PATH_FLAG_INDEX 35
+#define GRD_RNG_FLAG_INDEX 40
+#define NN_ARC_FLAG_INDEX 41
+#define DATA_TYPE_INDEX 42
+#define POSITIVE_CLASS_FLAG_INDEX 43
+#define CLASS_PAIRINGS_4 44
+#define POSITIVE_CLASS_FLAG_INDEX2 45
+#endif
+
 #define FASTA2VCF_CONVERT_n_PROCESS 0
 #define FASTA2VCF_CONVERT_n_EXIT 1
 
@@ -146,6 +171,48 @@ extern double TotalMuTime;
 
 #define SWEED_CO 0
 #define RAiSD_CO 1
+
+#ifdef _RSDAI
+
+#define OP_DEF -1
+#define OP_CREATE_IMAGES 0
+#define OP_TRAIN_CNN 1
+#define OP_TEST_CNN 2
+#define OP_USE_CNN 3
+
+#define PIXEL_REORDERING_ENABLED 1
+#define PIXEL_REORDERING_DISABLED 0
+
+#define SORT_ROWS 0
+#define SORT_COLUMNS 1
+
+#define AI_MODE_TRAIN_NETWORK 1
+#define AI_MODE_CLASSIFY_IMAGES 0
+
+#define HAMPEL_FILTER_SIZE 11
+
+#define IMG_DATA_RAW 0
+#define IMG_DATA_PAIRWISE_DISTANCE 1
+#define IMG_DATA_MUVAR_SCALED 2
+#define IMG_DATA_EXPERIMENTAL 3
+
+#define BIN_DATA_RAW 0
+#define BIN_DATA_ALLELE_COUNT 1
+
+#define ARC_SWEEPNET "SweepNet"
+#define CLA_SWEEPNET 2
+#define PCLA_SWEEPNET 1
+
+#define ARC_SWEEPNET1D "FAST-NN"
+#define CLA_SWEEPNET1D 2
+#define PCLA_SWEEPNET1D 1
+
+#define ARC_SWEEPNETRECOMB "SweepNetRecombination"
+#define CLA_SWEEPNETRECOMB 4
+#define PCLA_SWEEPNETRECOMB 2
+
+#endif
+ // images, training, classification, scan , compositescan
 
 // RAiSD.c
 extern struct timespec requestStart;
@@ -195,6 +262,27 @@ extern void *		rsd_realloc			(void * p, size_t size);
 void 			VCFFileCheck 			(void * vRSDDataset, char * fileName, FILE * fpOut);
 int 			VCFFileCheckAndReorder		(void * vRSDDataset, char * fileName, int overwriteOutput, FILE * fpOut);
 void 			printRAiSD 			(FILE * fpOut);
+FILE * 			skipLine 			(FILE * fp);
+void 			get_print_slen 			(int * slen, void * input, int mode);
+int 			getStringLengthInt 		(int prv, int in);
+int 			getStringLengthUint64 		(int prv, uint64_t in);
+int 			getStringLengthString 		(int prv, char * in);  
+int 			getStringLengthDouble0 		(int prv, double in);
+int 			getStringLengthDouble1 		(int prv, double in); 
+int 			getStringLengthDouble5 		(int prv, double in); 
+int 			getStringLengthExp 		(int prv, double in);
+double 			maxd 				(double a, double b); 
+
+#ifdef _RSDAI
+int 			split_string 			(char * src, char * str1, char * str2, char delimiter);
+void 			exec_command 			(char * cmd);
+void 			dir_exists_check 		(char * path);
+void			getIndicesFromImageName		(char * imgName, int * setIndex, int * gridPointIndex, int * gridPointDataIndex);
+int 			numOfClasses_NN_architecture		(char * arc);
+int 			numOfPositiveClasses_NN_architecture 	(char * arc);
+int 			is_valid_NN_architecture 		(char * arc);
+char * 			getDataType_string 		(char * imgFormat, int imgDataType);
+#endif
 
 #ifndef _INTRINSIC_POPCOUNT
 extern char	 	POPCNT_U16_LUT [0x1u << 16];
@@ -269,6 +357,57 @@ typedef struct
 	float 		muVarExp; // Flag: VAREXP
 	float		muSfsExp; // Flag: SFSEXP
 	float		muLdExp; // Flag: LDEXP
+	
+	// Evaluation 
+	uint64_t 	selectionTarget;
+	uint64_t 	selectionTargetDThreshold;	
+	double 		fprLoc;	
+	
+	double		tprThresMuVar;
+	double		tprThresMuSfs;
+	double		tprThresMuLd;
+	double 		tprThresMu;
+
+#ifdef _RSDAI
+	// RAiSD-AI
+	int		opCode; // IMG, TST, SCN
+	int		enTF; // Flag: TF
+	int		threads; // Flag: thr
+	int		useGPU; // Flag: gpu
+	char		networkArchitecture[STRING_SIZE]; // Flag: arc
+	
+	// IMG
+	uint64_t	imagesPerSimulation;
+	uint64_t	imageTargetSite; // this refers to the first generated image only.
+	int		imageWindowStep; // applied as a SNP-based sliding window left and right of the ics.
+	int		imageReorderOpt;
+	char		imageClassLabel[STRING_SIZE];
+	int		imagePositionCenteredEn;
+	int		forceRemove;
+	char		modelPath[STRING_SIZE];
+	int		numberOfClasses;
+	char **		classLabelList;
+	char **		classPathList;
+	unsigned int	imageHeight;
+	unsigned int	imageWidth;
+	int		epochs;
+	int		enBinFormat;
+	int		trnObjDetection; // 0: classification, 1: detection
+	uint64_t	gridRngLeBor;
+	uint64_t	gridRngRiBor;
+	int		imgDataType;
+	int		numOfPositiveClasses;
+	int * 		positiveClassIndex;
+	int		userWindowSize; // flag set if user provides the window size
+	
+	// Evaluation
+	double		tprThresNnPositiveClass0;
+	double		tprThresNnPositiveClass1;
+	
+	// Experimental
+	int		fullFrame;
+	int		gridPointReductionMax;	 	
+#endif
 
 } RSDCommandLine_t;
 
@@ -279,6 +418,7 @@ void 			RSDCommandLine_free			(RSDCommandLine_t * RSDCommandLine);
 void 			RSDCommandLine_init			(RSDCommandLine_t * RSDCommandLine);
 void 			RSDCommandLine_load			(RSDCommandLine_t * RSDCommandLine, int argc, char ** argv);
 void 			RSDCommandLine_print			(int argc, char ** argv, FILE * fpOut);
+void			RSDCommandLine_printInfo		(RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 			RSDCommandLine_printWarnings 		(RSDCommandLine_t * RSDCommandLine, int argc, char ** argv, void * RSDDataset, FILE * fpOut);
 void			RSDCommandLine_printExponents 		(RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 
@@ -304,8 +444,8 @@ typedef struct
 } RSDChunk_t;
 
 RSDChunk_t *	RSDChunk_new 			(void);
-void 		RSDChunk_free			(RSDChunk_t * ch, int64_t numberOfSamples);
-void 		RSDChunk_init			(RSDChunk_t * RSDChunk, int64_t numberOfSamples, int64_t createPatternPoolMask);
+void 		RSDChunk_free			(RSDChunk_t * ch);
+void 		RSDChunk_init			(RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine, int64_t numberOfSamples);
 void		RSDChunk_reset			(RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine);
 
 // RAiSD_HashMap.c
@@ -518,6 +658,7 @@ void		RSDDataset_getSetRegionLength_vcf	(RSDDataset_t * RSDDataset, RSDCommandLi
 void 		RSDDataset_printSiteReport 		(RSDDataset_t * RSDDataset, FILE * fp, int setIndex, int64_t imputePerSNP, int64_t createPatternPoolMask);
 void 		RSDDataset_resetSiteCounters 		(RSDDataset_t * RSDDataset);
 void		RSDDataset_calcMuVarDenom		(RSDDataset_t * RSDDataset);
+void 		RSDDataset_writeOutput 			(RSDDataset_t * RSDDataset, int setIndex, FILE * fpOut);
 #ifdef _ZLIB
 void		RSDDataset_getSetRegionLength_vcf_gz	(RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 int 		RSDDataset_getNextSNP_vcf_gz 		(RSDDataset_t * RSDDataset, RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine, uint64_t length, double maf, FILE * fpOut);
@@ -605,32 +746,55 @@ typedef struct
 	double *	buffer4Data; // muSFS
 	double *	buffer5Data; // muLD
 	double *	buffer6Data; // mu
+#ifdef _RSDAI
+	double *	buffer7Data; // nn
+	double *	buffer8Data; // pow(muVar, nn)
+	double *	buffer9Data; // second binary classification, SweepNetRecombination
+	double *	buffer10Data; // second binary classification, SweepNetRecombination
+#endif	
 	int64_t		currentScoreIndex;
+	
+	int		currentGridPointSize;
 
 } RSDMuStat_t;
 
 RSDMuStat_t * 	RSDMuStat_new 			(void);
 void 		RSDMuStat_free 			(RSDMuStat_t * mu);
 void 		RSDMuStat_init 			(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
+void 		RSDMuStat_resetScores 		(RSDMuStat_t * RSDMuStat);
 void 		RSDMuStat_setReportName 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 		RSDMuStat_setReportNamePerSet 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, FILE * fpOut, RSDDataset_t * RSDDataset, RSDCommonOutliers_t * RSDCommonOutliers);
 extern void	(*RSDMuStat_scanChunk) 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 		RSDMuStat_scanChunkBinary	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 void 		RSDMuStat_scanChunkWithMask	(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
-extern float   	getPatternCount			(RSDPatternPool_t * RSDPatternPool, int * pCntVec, int offset, int * patternID, int p0, int p1, int p2, int p3, int * pcntl, int * pcntr, int * pcntexll, int * pcntexlr);
+//extern float   	getPatternCount			(RSDPatternPool_t * RSDPatternPool, int * pCntVec, int offset, int * patternID, int p0, int p1, int p2, int p3, int * pcntl, int * pcntr, int * pcntexll, int * pcntexlr);
+extern float 	getPatternCounts (int winMode, RSDMuStat_t * RSDMuStat, int sizeL, int sizeR, int * patternID, int p0, int p1, int p2, int p3, int * pcntl, int * pcntr, int * pcntexll, int * pcntexlr);
 void		RSDMuStat_loadExcludeTable 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
 void		RSDMuStat_excludeRegion 	(RSDMuStat_t * RSDMuStat, RSDDataset_t * RSDDataset);
 extern void 	(*RSDMuStat_storeOutput) 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
+void 		RSDMuStat_output2FileSimple 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
+void 		RSDMuStat_output2FileFull 	(RSDMuStat_t * RSDMuStat, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu);
 void 		RSDMuStat_writeBuffer2File 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
-
+#ifdef _RSDAI
+void		RSDMuStat_output2BufferFullExtended (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, double windowCenter, double windowStart, double windowEnd, double muVar, double muSfs, double muLd, double mu, double label1, double label2, double label3, double label4, int classes);
+void 		RSDMuStat_writeBuffer2FileNoInterp (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
+void 		RSDMuStat_removeOutliers 	(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine);
+#endif
+void 		RSDMuStat_storeOutputConfigure 	(RSDCommandLine_t * RSDCommandLine);
+float 		RSDMuStat_calcMuVar 		(RSDMuStat_t * RSDMuStat, RSDDataset_t * RSDDataset, RSDChunk_t * RSDChunk, int snpf, int snpl);
+float 		RSDMuStat_calcMuSfsFull 	(RSDMuStat_t * RSDMuStat, RSDDataset_t * RSDDataset, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine, int snpf, int snpl);
+float 		RSDMuStat_calcMuLd 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, int winlsnpf, int winlsnpl, int winrsnpf, int winrsnpl);
+float 		RSDMuStat_calcMu 		(RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, float muVar, float muSfs, float muLd, double windowCenter, int isValid, FILE * fpOut);
+int 		RSDMuStat_placeWindow 		(RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, int index, int * snpf, int * snpl, int * winlsnpf, int * winlsnpl, int * winrsnpf, int * winrsnpl,  double * windowCenter, double * windowStart, double * windowEnd, int mode);
 // RAiSD_Plot.c
 void 		RSDPlot_printRscriptVersion 	(RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
 int 		RSDPlot_checkRscript 		(void);
 void 		RSDPlot_createRscriptName 	(RSDCommandLine_t * RSDCommandLine, char * scriptName);
 void 		RSDPlot_generateRscript 	(RSDCommandLine_t * RSDCommandLine, int mode);
 void 		RSDPlot_removeRscript 		(RSDCommandLine_t * RSDCommandLine,int mode);
-void 		RSDPlot_createPlot 		(RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, int mode);
+void 		RSDPlot_createPlot 		(RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, int mode, void * nn);
 void 		RSDPlot_createReportListName 	(RSDCommandLine_t * RSDCommandLine, char * reportListName);
+void 		RSDMuStat_writeOutput 		(RSDMuStat_t * RSDMuStat, RSDDataset_t * RSDDataset, int setIndex, FILE * fpOut); // print max scores to stdout and info file
 
 // RAiSD_Fasta2Vcf.c
 typedef struct
@@ -669,3 +833,308 @@ void 		RSDVcf2ms_printHeader 			(RSDVcf2ms_t * RSDVcf2ms);
 void 		RSDVcf2ms_printSegsitesAndPositions 	(RSDVcf2ms_t * RSDVcf2ms);
 void 		RSDVcf2ms_printSNPData 			(RSDVcf2ms_t * RSDVcf2ms);
 void		RSDVcf2ms_reset				(RSDVcf2ms_t * RSDVcf2ms);
+
+// RAiSD_Eval.c
+typedef struct
+{
+	uint64_t 	selectionTarget;
+	double 		muVarAccum;
+	double 		muSfsAccum;
+	double 		muLdAccum;
+	double 		muAccum;
+	double		nnPositiveClass0Accum;
+	double		nnPositiveClass1Accum;
+	
+
+	uint64_t 	selectionTargetDThreshold;
+	double 		muVarSuccess;
+	double		muSfsSuccess;
+	double 		muLdSuccess;
+	double 		muSuccess;
+	double		nnPositiveClass0Success;
+	double		nnPositiveClass1Success;
+	
+	double 		fprLoc;
+	int 		muVarSortVecSz;
+	int 		muSfsSortVecSz;
+	int 		muLdSortVecSz;	
+	int 		muSortVecSz;
+	int 		nnPositiveClass0SortVecSz;
+	int 		nnPositiveClass1SortVecSz;	
+	float *		muVarSortVec;
+	float * 	muSfsSortVec;
+	float * 	muLdSortVec;	
+	float * 	muSortVec;
+	float * 	nnPositiveClass0SortVec;
+	float * 	nnPositiveClass1SortVec;
+	
+	double		tprThresMuVar;
+	double		tprThresMuSfs;
+	double		tprThresMuLd;
+	double 		tprThresMu;
+	double 		tprThresNnPositiveClass0;
+	double 		tprThresNnPositiveClass1;
+	double		tprScrMuVar;
+	double		tprScrMuSfs;
+	double		tprScrMuLd;
+	double 		tprScrMu;
+	double 		tprScrNnPositiveClass0;
+	double 		tprScrNnPositiveClass1;
+
+} RSDEval_t;
+
+RSDEval_t * 	RSDEval_new					(RSDCommandLine_t * RSDCommandLine);
+void		RSDEval_init					(RSDEval_t * RSDEval, RSDCommandLine_t * RSDCommandLine);
+void 		RSDEval_free 					(RSDEval_t * RSDEval);
+void 		RSDEval_calculateDetectionMetricsConfigure 	(RSDCommandLine_t * RSDCommandLine);
+extern void 	(*RSDEval_calculateDetectionMetrics)		(RSDEval_t * RSDEval, void * RSDMuStat_or_RSDResults);
+void 		RSDEval_calculateDetectionMetricsSlidingWindow	(RSDEval_t * RSDEval, void * RSDMuStat_or_RSDResults);
+void 		RSDEval_calculateDetectionMetricsGrid		(RSDEval_t * RSDEval, void * RSDMuStat_or_RSDResults);
+void		RSDEval_print 					(RSDEval_t * RSDEval, void * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, int sets, FILE * fpOut);
+
+
+#ifdef _RSDAI
+
+//RAiSD_PNG.c
+typedef struct
+{
+    uint8_t 	red;
+    uint8_t 	green;
+    uint8_t 	blue;
+    
+} pixel_t;
+   
+typedef struct
+{
+    pixel_t *	pixels;
+    uint64_t 	width;
+    uint64_t 	height;
+    
+} bitmap_t;
+
+pixel_t * 	getPixel 		(bitmap_t * bitmap, int x, int y);
+int 		save_png_to_file 	(bitmap_t *bitmap, const char * path);
+
+//RAiSD_Sort.c
+typedef struct
+{
+	int		maxListSize;
+	int		curListSize;
+	uint64_t *	scoreList;
+	int64_t * 	indexList;
+		
+} RSDSort_t;
+
+RSDSort_t * 	RSDSort_new 		(RSDCommandLine_t * RSDCommandLine);
+void 		RSDSort_init 		(RSDSort_t * RSDSort, int size);
+void 		RSDSort_rst 		(RSDSort_t * RSDSort);
+void 		RSDSort_free 		(RSDSort_t * RSDSort);
+void 		RSDSort_appendScore 	(RSDSort_t * RSDSort, uint64_t score, int64_t index);
+void 		RSDSort_appendScores 	(RSDSort_t * RSDSort, void * RSDImage, int mode);
+
+
+typedef struct
+{
+	int64_t 	size; // this is the gridPointSize
+	
+	double *	position;
+	double 		positionReduced;
+	
+	float * 	muVar;
+	double  	muVarReduced;
+
+	float *		muSfs;
+	double 		muSfsReduced;
+	
+	float *		muLd;
+	double 		muLdReduced;
+	
+	float * 	mu;
+	double 		muReduced;
+		
+	float *		nnPositiveClass0; // 2-class CNN (SweepNet, FAST-NN)
+	double		nnPositiveClass0Reduced;	
+		
+	float * 	nnPositiveClass1; // 4-class CNN (SweepNetRecombination) or mu-var-nn-class0 combination for 2-class CNN
+	double 		nnPositiveClass1Reduced;	
+	
+	
+	
+	float * 	nnScores2; // used for recomb. signal only
+	float * 	nnScores3; // used for recomb. signal only
+	
+
+	
+	double 		nnScore0Final;
+
+	double 		nnScore2Final;
+	double 		nnScore3Final;	
+
+	
+	
+	
+	double		finalRegionCenter; //Position; // TODO-AI- to be fixed..
+	double		finalRegionStart;
+	double		finalRegionEnd;
+	float		finalRegionScore;
+
+} RSDGridPoint_t;
+
+RSDGridPoint_t * 	RSDGridPoint_new 			(void);
+void			RSDGridPoint_free 			(RSDGridPoint_t * RSDGridPoint);
+void 			RSDGridPoint_addNewPosition 		(RSDGridPoint_t * RSDGridPoint, RSDCommandLine_t * RSDCommandLine, double pos);
+void 			RSDGridPoint_reduce 			(RSDGridPoint_t * RSDGridPoint, RSDCommandLine_t * RSDCommandLine, int op); 
+int 			RSDGridPoint_getTargetSNPIndex 		(RSDChunk_t * RSDChunk, RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, double targetPos);
+RSDGridPoint_t * 	RSDGridPoint_compute 			(void * RSDImagev, RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, 
+				       				 RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut, double targetPos, char * destinationPath, 
+				       				 int scoreIndex, int setIndex);
+void 			RSDGridPoint_calcCompositeScore		(RSDGridPoint_t * RSDGridPoint, int gridPointDataIndex);
+void 			RSDGridPoint_write2FileSimple 		(RSDGridPoint_t * RSDGridPoint, RSDMuStat_t * RSDMuStat);
+void 			RSDGridPoint_write2FileFull		(RSDGridPoint_t * RSDGridPoint, RSDMuStat_t * RSDMuStat);
+extern void 		(*RSDGridPoint_write2File) 		(RSDGridPoint_t * RSDGridPoint, RSDMuStat_t * RSDMuStat);
+void 			RSDGridPoint_write2FileConfigure 	(RSDCommandLine_t * RSDCommandLine);
+void 			RSDGridPoint_getSteps 			(RSDCommandLine_t * RSDCommandLine, int * stepsLeft, int * stepsRight);
+
+//RAiSD_Image.c
+typedef struct 
+{
+	int 		width; // window size
+	int 		height; // sample size
+	int		snpLengthInBytes;	
+	int64_t		firstSNPIndex;
+	int64_t		lastSNPIndex;	
+	uint64_t 	firstSNPPosition; 
+	uint64_t 	lastSNPPosition;
+	char 		destinationPath [STRING_SIZE];
+	uint64_t	remainingSetImages;
+	uint64_t 	generatedSetImages;
+	uint64_t 	totalGeneratedImages; 
+	int8_t * 	data;
+	uint64_t ** 	compressedData;
+	int8_t *	dataT; // for pixel reordering 
+	int8_t * 	incomingSNP;
+	uint32_t *	rowSortScore;
+	RSDSort_t *	rowSorter;
+	uint32_t *	colSortScore;
+	RSDSort_t *	colSorter;
+	double *	nextSNPDistance;
+	//uint8_t * 	byteBuffer; 
+	float *		derivedAlleleFrequency;	
+	double		sitePosition;
+	bitmap_t 	bitmap;	
+
+} RSDImage_t;
+
+RSDImage_t * 	RSDImage_new 				(RSDCommandLine_t * RSDCommandLine);
+void 		RSDImage_init 				(RSDImage_t * RSDImage, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDPatternPool_t * RSDPatternPool, RSDCommandLine_t * RSDCommandLine, RSDChunk_t * RSDChunk, int setIndex, FILE * fpOut);
+void 		RSDImage_free 				(RSDImage_t * RSDImage);
+void		RSDImage_print 				(RSDImage_t * RSDImage, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 		RSDImage_makeDirectory	 		(RSDImage_t * RSDImage, RSDCommandLine_t * RSDCommandLine);
+void 		RSDImage_setRange 			(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, int64_t firstSNPIndex, int64_t lastSNPIndex);
+void 		decompressPattern 			(uint64_t * pattern, int patternSz, int sampleSz, int8_t * SNP);
+void 		RSDImage_getData 			(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine);
+void		RSDImage_setRemainingSetImages 		(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine);
+void 		RSDImage_resetRemainingSetImages 	(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine);
+void 		RSDImage_reorderData 			(RSDImage_t * RSDImage, RSDCommandLine_t * RSDCommandLine);
+void 		RSDImage_createImages 			(RSDImage_t * RSDImage, RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 		RSDImage_createGridImages 		(RSDImage_t * RSDImage, RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, RSDSort_t * RSDSortRows, RSDSort_t * RSDSortColumns, FILE * fpOut, uint64_t * remainingImages);
+
+
+RSDGridPoint_t * RSDImage_createImagesFlex (RSDImage_t * RSDImage, RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut, double targetPos, char * destinationPath, int scoreIndex);
+int 		RSDImage_savePNG 			(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, int imgIndex, int8_t * data, char * destinationPath, float muVar, int scoreIndex, int setIndex, int gridPointSize, FILE * fpOut);
+int 		RSDImage_saveBIN 			(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t * RSDDataset, RSDPatternPool_t * RSDPatternPool, RSDCommandLine_t * RSDCommandLine, int imgIndex, int8_t * data, char * destinationPath, int scoreIndex, int setIndex, int gridPointSize, double targetPos, FILE * fpOut);
+void 		RSDImage_writeOutput 			(RSDImage_t * RSDImage, RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, int setIndex, FILE * fpOut);
+void 		RSDImage_setSitePosition 		(RSDImage_t * RSDImage, double sitePosition);
+void 		RSDImage_generateFullFrame 		(RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, FILE * fpOut, char * destinationPath, int scoreIndex, int setIndex);
+
+//RAiSD_NeuralNetwork.c
+typedef struct
+{
+	char		pyPath[STRING_SIZE];
+	char		cnnMode[STRING_SIZE];
+	int		imageHeight;
+	int		imageWidth;
+	int		dataFormat; // 0: PNG, 1: bin
+	int 		dataType; // 0: raw, 1: pw dist, 2: mu-var scaled
+	char		networkArchitecture[STRING_SIZE]; 
+	int		epochs;
+	char		inputPath [STRING_SIZE]; // for data
+	char		modelPath [STRING_SIZE]; // for the model
+	char		outputPath [STRING_SIZE]; // for the inference 
+	int		classSize;
+	char **		classLabel;
+
+} RSDNeuralNetwork_t;
+
+RSDNeuralNetwork_t * 	RSDNeuralNetwork_new 			(RSDCommandLine_t * RSDCommandLine);
+void			RSDNeuralNetwork_init			(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 			RSDNeuralNetwork_free			(RSDNeuralNetwork_t * RSDNeuralNetwork);
+void 			RSDNeuralNetwork_config			(RSDNeuralNetwork_t * RSDNeuralNetwork, char * mode);
+void 			RSDNeuralNetwork_createTrainCommand 	(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, char * trainCommand, int showErrors);
+void			RSDNeuralNetwork_train 			(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void			RSDNeuralNetwork_test 			(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void 			RSDNeuralNetwork_printDependencies 	(RSDCommandLine_t * RSDCommandLine, FILE * fpOut);
+void			RSDNeutralNetwork_run 			(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, void * RSDGrid, FILE * fpOut);
+int			RSDNeuralNetwork_modelExists		(char * modelPath);
+void			RSDNeuralNetwork_getColumnHeaders 	(RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, char * colHeader1, char * colHeader2);
+
+//RAiSD_Results.c
+typedef struct
+{
+	int64_t			setsTotal;
+	char **			setID;
+	int64_t 		setGridSize;	
+	int64_t	*		gridPointSize; // this is the number of images per gridPoint - practically 2D array
+	RSDGridPoint_t ** 	gridPointData; // this is all data for each gridPoint for all gridPoints - practically 2D array
+	
+	float 			muVarMax; 
+	float 			muSfsMax; 
+	float 			muLdMax; 
+	float 			muMax;
+	float			nnPositiveClass0Max;
+	float			nnPositiveClass1Max;	
+
+	double 			muVarMaxLoc;
+	double 			muSfsMaxLoc;
+	double			muLdMaxLoc; 
+	double 			muMaxLoc;
+	double			nnPositiveClass0MaxLoc;
+	double			nnPositiveClass1MaxLoc;
+
+} RSDResults_t;
+
+RSDResults_t * 	RSDResults_new 			(RSDCommandLine_t * RSDCommandLine);
+void		RSDResults_free			(RSDResults_t * RSDResults);
+void 		RSDResults_setGridSize 		(RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine);
+void 		RSDResults_incrementSetCounter 	(RSDResults_t * RSDResults);
+void 		RSDResults_setGridPointSize 	(RSDResults_t * RSDResults, int64_t gridPointIndex, int64_t gridPointSize);
+void 		RSDResults_setGridPoint		(RSDResults_t * RSDResults, int64_t gridPointIndex, RSDGridPoint_t * RSDGridPoint);
+void		RSDResults_process 		(RSDResults_t * RSDResults, RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, RSDEval_t * RSDEval);
+void 		RSDResults_processSet 		(RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine, RSDMuStat_t * RSDMuStat, int setIndex, int gridSize, int gridPointOffset);
+void		RSDResults_saveSetID 		(RSDResults_t * RSDResults, RSDDataset_t * RSDDataset);
+void 		RSDResults_load 		(RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine);
+void 		RSDResults_load_2x2 		(RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine);
+
+//RAiSD_Grid.c
+typedef struct
+{
+	int		sizeAcc;
+	int		size;
+	double 		firstPoint;
+	double		pointOffset;
+	char 		destinationPath [STRING_SIZE];
+
+} RSDGrid_t;
+
+RSDGrid_t * 	RSDGrid_new 		(RSDCommandLine_t * RSDCommandLine);
+void		RSDGrid_free		(RSDGrid_t * RSDGrid);
+void		RSDGrid_init		(RSDGrid_t * RSDGrid, RSDDataset_t * RSDDataset, RSDChunk_t * RSDChunk, RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLine, int setDone);
+void 		RSDGrid_makeDirectory	(RSDGrid_t * RSDGrid, RSDCommandLine_t * RSDCommandLine, RSDImage_t * RSDImage);
+void 		RSDGrid_cleanDirectory	(RSDGrid_t * RSDGrid, RSDCommandLine_t * RSDCommandLine);
+void		RSDGrid_processChunk	(RSDGrid_t * RSDGrid, RSDImage_t * RSDImage, RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk, RSDPatternPool_t * RSDPatternPool, RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLine, RSDResults_t * RSDResults);
+#endif
+
+
+
+
+

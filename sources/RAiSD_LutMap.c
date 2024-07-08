@@ -191,6 +191,3 @@ void RSDLutMap_update (RSDLutMap_t * lm, uint64_t * query)
 		tquery >>= LUTMAP_GROUPSIZE;		
 	}
 }
-
-
-

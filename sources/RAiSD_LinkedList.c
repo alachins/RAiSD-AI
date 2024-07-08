@@ -36,7 +36,7 @@ RSDLinkedListNode_t * RSDLinkedList_new (double pos, char * snp)
 	newNode->snpData = (char *)rsd_malloc(sizeof(char)*((unsigned long)snpSize));
 	assert(newNode->snpData!=NULL);
 
-	strncpy(newNode->snpData, snp, strlen(snp));
+	strncpy(newNode->snpData, snp, snpSize);
 	newNode->snpData[strlen(snp)] = '\0';
 
 	return newNode;
@@ -168,17 +168,3 @@ RSDLinkedListNode_t * RSDLinkedList_free(RSDLinkedListNode_t * listHead)
 
 	return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

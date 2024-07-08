@@ -492,7 +492,7 @@ void RSDCommonOutliers_process (RSDCommonOutliers_t * RSDCommonOutliers, RSDComm
 	if(suc)
 	{
 		RSDPlot_generateRscript(RSDCommandLine, RSDPLOT_COMMONOUTLIERS);
-		RSDPlot_createPlot (RSDCommandLine, NULL, NULL, RSDCommonOutliers, RSDPLOT_COMMONOUTLIERS);		
+		RSDPlot_createPlot (RSDCommandLine, NULL, NULL, RSDCommonOutliers, RSDPLOT_COMMONOUTLIERS, NULL);		
 		RSDPlot_removeRscript(RSDCommandLine, RSDPLOT_COMMONOUTLIERS);
 		
 		strcpy(tstring, "RAiSD_SweeDReportSorted.");
@@ -500,7 +500,6 @@ void RSDCommonOutliers_process (RSDCommonOutliers_t * RSDCommonOutliers, RSDComm
 		strcpy(RSDCommonOutliers->report1Filename, tstring);
 		
 		int ret = remove(tstring);
-		ret = ret;
 		assert(ret==0);	
 
 		strcpy(tstring, "RAiSD_RAiSDReportSorted.");

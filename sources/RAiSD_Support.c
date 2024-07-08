@@ -38,6 +38,7 @@ char ** addChromToList 		(char * newChromName, char ** chromList, int * chromLis
 
 char POPCNT_U16_LUT [0x1u << 16];
 
+/*
 unsigned long long rdtsc(void)
 {
 	unsigned a, d;
@@ -46,6 +47,7 @@ unsigned long long rdtsc(void)
 
 	return ((unsigned long long)a) | (((unsigned long long)d) << 32);
 }
+*/
 
 #ifndef _INTRINSIC_POPCOUNT
 int popcount_u32_iterative (unsigned int n)
@@ -265,7 +267,6 @@ void reconGT (char * data)
 
 	double checksum = p00+p01+p11;
 	assert(checksum>=0.999 && checksum<=1.001);
-	checksum = checksum;
 
 	int val = rand();
 	double rval = ((double)val) / ((double)RAND_MAX);
@@ -323,13 +324,11 @@ void getGTData_vcf (char * string, int locationGT, int locationGP, int locationG
 	{
 		int ret = getGXData_vcf(string, locationGT, data);
 		assert(ret==1);
-		ret = ret;
 	}
 	else
 	{
 		int ret = getGXData_vcf(string, locationGL, data);
 		assert(ret==1);
-		ret = ret;
 
 		double p00 = 0.0, p01 = 0.0, p11 = 0.0; // likelihoods
 		getGPProbs(data, &p00, &p01, &p11, 1); 
@@ -368,9 +367,6 @@ int getGTAlleles_vcf (char * string, char * stateVector, int statesTotal, char *
 {	
 	assert(statesTotal>=2);
 	assert(stateVector!=NULL);
-
-	statesTotal = statesTotal;
-	stateVector = stateVector;
 
 	int i, j=0, index=0, start=0, end=0, len = (int)strlen(string), skipSNP=0;
 	
@@ -438,7 +434,6 @@ int getGTAlleles_vcf (char * string, char * stateVector, int statesTotal, char *
 	return skipSNP;
 }
 
-
 float * putInSortVector(int * size, float * vector, float value)
 {
 	(*size)++;
@@ -476,6 +471,14 @@ double DIST (double a, double b)
 		return b-a;
 }
 
+double maxd (double a, double b)
+{
+	if(a>b)
+		return a;
+		
+	return b;
+}
+
 char alleleMask_binary (char c, int * isDerived, int * isValid, FILE * fpOut)
 {
 	*isDerived = 0;
@@ -492,7 +495,17 @@ char alleleMask_binary (char c, int * isDerived, int * isValid, FILE * fpOut)
 			*isDerived = 1;
 			*isValid = 1;
 			return c;
+			
+		/*case '2': // This was added for Stefan's datasets
+			*isDerived = 1;
+			*isValid = 1;
+			return '1';
 
+		case '3': // This was added for Stefan's datasets
+			*isDerived = 1;
+			*isValid = 1;
+			return '1';
+		*/
 		/*case '-':
 			*isDerived = 0;
 			*isValid = 1;
@@ -775,7 +788,7 @@ void VCFFileCheck (void * vRSDDataset, char * fileName, FILE * fpOut) // TODO: I
 	FILE * fp = RSDDataset->inputFilePtr;
 
 	char fileNameNew[STRING_SIZE];
-	strncpy(fileNameNew, fileName, STRING_SIZE);
+	strncpy(fileNameNew, fileName, STRING_SIZE-1);
 	strcat(fileNameNew, ".fxd");
 
 	char tstring[STRING_SIZE];
@@ -928,7 +941,7 @@ int VCFFileCheckAndReorder (void * vRSDDataset, char * fileName, int overwriteOu
 	FILE * fpNew = NULL;
 
 	char fileNameNew[STRING_SIZE];
-	strncpy(fileNameNew, fileName, STRING_SIZE);
+	strncpy(fileNameNew, fileName, STRING_SIZE-1);
 	strcat(fileNameNew, ".fxd");
 
 	char tstring[STRING_SIZE];
@@ -1057,7 +1070,6 @@ int VCFFileCheckAndReorder (void * vRSDDataset, char * fileName, int overwriteOu
 			}
 		}
 	}
-
 
 	if(reorderReq!=0)
 	{
@@ -1269,6 +1281,248 @@ int VCFFileCheckAndReorder (void * vRSDDataset, char * fileName, int overwriteOu
 	return VCF_FILE_CHECK_PASS;
 }
 
+#ifdef _RSDAI
+int split_string (char * src, char * str1, char * str2, char delimiter)
+{
+	assert(src!=NULL);
+	assert(str1!=NULL);
+	assert(str2!=NULL);
+	
+	int i=-1, sz=strlen(src);
+	
+	for(i=0;i<sz;i++)
+	{
+		if(src[i]==delimiter)
+			break;
+	}
+	
+	if(i>=sz)
+		return -1;
+	
+	memcpy(str1, src, sizeof(char)*i);
+//	strncpy(str1, src, i);
+	str1[i]='\0';
+
+	memcpy(str2, src+i+1, sizeof(char)*(sz-i-1));
+	
+//	strncpy(str2, src+i+1, sz-i-1);
+	str2[sz-i-1]='\0';
+	
+	return 1;	
+}
+
+void exec_command (char * cmd)
+{
+	assert(cmd);
+	
+#ifdef _C1
+	int ret = system(cmd);
+	assert(ret!=-1);	
+#else
+	fp = popen(cmd);
+	assert(fp!=NULL);
+
+	int ret = pclose(fp);
+	assert(ret!=-1);	
+#endif	
+}
+
+void dir_exists_check (char * path)
+{
+	assert(path!=NULL);
+	
+	struct stat st;
+	
+	if(stat(path,&st) != 0)
+	{
+		fprintf(stderr, "\nERROR: Directory %s not found!\n\n", path);
+		exit(0);
+	}
+}
+
+void getIndicesFromImageName (char * imgName, int * setIndex, int * gridPointIndex, int * gridPointDataIndex)
+{
+	assert(imgName!=NULL);
+	assert(setIndex!=NULL);
+	assert(gridPointIndex!=NULL);
+	assert(gridPointDataIndex!=NULL);
+	
+	char tstring[STRING_SIZE];
+	
+	strncpy(tstring, imgName, STRING_SIZE-1);
+	
+	char * istring = strtok(tstring, "_");
+	(*setIndex) = (int)atoi(istring);
+	
+	istring = strtok(NULL, "_");
+	(*gridPointIndex) = (int)atoi(istring);	
+	
+	istring = strtok(NULL, ".");
+	(*gridPointDataIndex) = (int)atoi(istring);	
+}
+
+int is_valid_NN_architecture (char * arc)
+{
+	assert(arc!=NULL);
+	
+	if(!strcmp(arc, ARC_SWEEPNET))
+		return 1;
+		
+	if(!strcmp(arc, ARC_SWEEPNET1D))
+		return 1;
+		
+	if(!strcmp(arc, ARC_SWEEPNETRECOMB))
+		return 1;
+
+	return 0;	
+}
+
+int numOfClasses_NN_architecture (char * arc)
+{
+	assert(arc!=NULL);
+	
+	if(!strcmp(arc, ARC_SWEEPNET))
+		return CLA_SWEEPNET;
+		
+	if(!strcmp(arc, ARC_SWEEPNET1D))
+		return CLA_SWEEPNET1D;
+		
+	if(!strcmp(arc, ARC_SWEEPNETRECOMB))
+		return CLA_SWEEPNETRECOMB;
+
+	fprintf(stderr, "\nERROR: Unknown network architecture %s!\n\n", arc); 
+	exit(0);
+}
+
+int numOfPositiveClasses_NN_architecture (char * arc)
+{
+	assert(arc!=NULL);
+	
+	if(!strcmp(arc, ARC_SWEEPNET))
+		return PCLA_SWEEPNET;
+		
+	if(!strcmp(arc, ARC_SWEEPNET1D))
+		return PCLA_SWEEPNET1D;
+		
+	if(!strcmp(arc, ARC_SWEEPNETRECOMB))
+		return PCLA_SWEEPNETRECOMB;
+
+	fprintf(stderr, "\nERROR: Unknown network architecture %s!\n\n", arc); 
+	exit(0);
+}
+
+char * getDataType_string (char * imgFormat, int imgDataType)
+{
+	assert(imgFormat!=NULL);
+	assert(imgDataType>=0 && imgDataType<=3);
+	
+	if(!strcmp(imgFormat, "bin"))
+	{
+		if(imgDataType==BIN_DATA_RAW)
+			 return "raw SNP data and SNP distances";
+			 
+		if(imgDataType==BIN_DATA_ALLELE_COUNT)
+			 return "derived allele frequencies and SNP distances";
+			
+		return "unknown data type (binary)";
+	}
+	else
+	{
+		if(imgDataType==IMG_DATA_RAW)
+			 return "raw SNP data";
+			 
+		if(imgDataType==IMG_DATA_PAIRWISE_DISTANCE)
+			 return "raw SNP data and SNP distances";
+
+		if(imgDataType==IMG_DATA_MUVAR_SCALED)
+			 return "raw SNP data scaled based on mu-var";
+			 
+ 		if(imgDataType==IMG_DATA_EXPERIMENTAL)
+			 return "undefined data type (PNG, experimental)";
+			
+		return "unknown data type (PNG)";	
+	}
+	
+	return "unknown data type";
+}
+#endif
+
+int getStringLengthInt (int prv, int in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%d", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+int getStringLengthUint64 (int prv, uint64_t in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%lu", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+int getStringLengthString (int prv, char * in) 
+{
+	int sLen = ((int)strlen(in))>prv?(int)strlen(in):prv;
+	return sLen;
+}
+
+int getStringLengthDouble0 (int prv, double in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%.0f", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+int getStringLengthDouble1 (int prv, double in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%.1f", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+int getStringLengthDouble5 (int prv, double in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%.5f", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+int getStringLengthExp (int prv, double in) 
+{
+	char tstring[STRING_SIZE];
+	sprintf(tstring, "%.3e", in);
+	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
+	return sLen;
+}
+
+#ifdef _RSDAI
+void printRAiSD (FILE * fpOut)
+{
+	// https://www.developmenttools.com/ascii-art-generator/#p=testall&v=0&f=O8&t=RAiSD-AI
+	// Roman
+   
+const char * raisd = "\n\
+<<<==============================================================================================o\n\n\
+   ooooooooo.         .o.        o8o   .oooooo..o oooooooooo.                   .o.       ooooo\n\
+   `888   `Y88.      .888.       `\"'  d8P'    `Y8 `888'   `Y8b                 .888.      `888'\n\
+    888   .d88'     .8\"888.     oooo  Y88bo.       888      888               .8\"888.      888\n\
+    888ooo88P'     .8' `888.    `888   `\"Y8888o.   888      888              .8' `888.     888\n\
+    888`88b.      .88ooo8888.    888       `\"Y88b  888      888   8888888   .88ooo8888.    888\n\
+    888  `88b.   .8'     `888.   888  oo     .d8P  888     d88'            .8'     `888.   888\n\
+   o888o  o888o o88o     o8888o o888o 8\"\"88888P'  o888bood8P'             o88o     o8888o o888o\n\n\
+o==============================================================================================>>>\n\
+"; 
+
+fprintf(fpOut, "%s", raisd);
+fflush(fpOut);
+}
+#else
 void printRAiSD (FILE * fpOut)
 {
 
@@ -1285,5 +1539,4 @@ const char * raisd = "\n\
 fprintf(fpOut, "%s", raisd);
 fflush(fpOut);
 }
-
-
+#endif

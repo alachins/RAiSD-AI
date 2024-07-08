@@ -23,22 +23,7 @@
 
 void RSD_init (void);
 
-uint64_t selectionTarget;
-double MuVar_Accum;
-double MuSfs_Accum;
-double MuLd_Accum;
-double Mu_Accum;
-uint64_t selectionTargetDThreshold;
-double MuVar_Success;
-double MuSfs_Success;
-double MuLd_Success;
-double Mu_Success;
-double fpr_loc;
-int scr_svec_sz;
-float * scr_svec;
-double tpr_thres;
-double tpr_scr;
-int setIndexValid;
+int setIndexValid; // this is used for selecting a single set to process
 double StartTime;
 double FinishTime;
 double MemoryFootprint;
@@ -62,11 +47,20 @@ void RSD_header (FILE * fpOut)
 	printRAiSD (fpOut);
 
 	fprintf(fpOut, "\n");
-	fprintf(fpOut, " RAiSD, Raised Accuracy in Sweep Detection\n");
-	fprintf(fpOut, " This is version %d.%d (released in %s %d)\n", MAJOR_VERSION, MINOR_VERSION, RELEASE_MONTH, RELEASE_YEAR);
-	fprintf(fpOut, " Copyright (C) 2017, and GNU GPL'd, by Nikolaos Alachiotis and Pavlos Pavlidis\n");
-	fprintf(fpOut, " Contact n.alachiotis/pavlidisp at gmail.com\n");
-	fprintf(fpOut, "\n");
+#ifdef _RSDAI	
+	fprintf(fpOut, " RAiSD-AI, Raised Accuracy in Sweep Detection using AI (version %d.%d, released in %s %d)\n", MAJOR_VERSION, MINOR_VERSION, RELEASE_MONTH, RELEASE_YEAR);
+#else
+	fprintf(fpOut, " RAiSD, Raised Accuracy in Sweep Detection (version %d.%d, released in %s %d)\n", MAJOR_VERSION, MINOR_VERSION, RELEASE_MONTH, RELEASE_YEAR);
+#endif
+	//fprintf(fpOut, " This is version %d.%d (released in %s %d)\n\n", MAJOR_VERSION, MINOR_VERSION, RELEASE_MONTH, RELEASE_YEAR);
+
+	fprintf(fpOut, " Copyright (C) 2017-2024, and GNU GPL'd, by Nikolaos Alachiotis and Pavlos Pavlidis\n");
+	fprintf(fpOut, " Contact: n.alachiotis@utwente.nl and pavlidisp@gmail.com\n");
+#ifdef _RSDAI
+	fprintf(fpOut, " Code contributions: Sjoerd van den Belt and Hanqing Zhao\n");
+#endif
+
+	fprintf(fpOut, "\n \t\t\t\t    * * * * *\n\n");
 }
 
 void RSD_init (void)
@@ -81,24 +75,7 @@ void RSD_init (void)
 	RAiSD_SiteReport_FP = NULL;
 	RAiSD_ReportList_FP = NULL;
 
-	/*Testing*/
-	selectionTarget = 0ull;
-	selectionTargetDThreshold = 0ull;
-	MuVar_Accum = 0.0;
- 	MuSfs_Accum = 0.0;
- 	MuLd_Accum = 0.0;
- 	Mu_Accum = 0.0;
- 	MuVar_Success = 0.0;
-	MuSfs_Success = 0.0;
-	MuLd_Success = 0.0;
-	Mu_Success = 0.0;
-	fpr_loc = 0.0;
-	scr_svec_sz = 0;
-	scr_svec = NULL;
-	tpr_thres = 0.0;
-	tpr_scr = 0.0;
 	setIndexValid = -1;
-	/**/
 
 #ifndef _INTRINSIC_POPCOUNT
 	popcount_u64_init();
@@ -120,8 +97,6 @@ int main (int argc, char ** argv)
 	RSDCommandLine_t * RSDCommandLine = RSDCommandLine_new();
 	RSDCommandLine_init(RSDCommandLine);
 	RSDCommandLine_load(RSDCommandLine, argc, argv);
-
-	RSDPlot_generateRscript(RSDCommandLine, RSDPLOT_BASIC_MU);
 	
 	RSD_header(stdout);
 	RSD_header(RAiSD_Info_FP);
@@ -130,6 +105,52 @@ int main (int argc, char ** argv)
 	RSDCommandLine_print(argc, argv, stdout);
 	RSDCommandLine_print(argc, argv, RAiSD_Info_FP);
 	RSDCommandLine_print(argc, argv, RAiSD_SiteReport_FP);
+	RSDCommandLine_printInfo(RSDCommandLine, stdout);
+	RSDCommandLine_printInfo(RSDCommandLine, RAiSD_Info_FP);
+
+	RSDEval_t * RSDEval = RSDEval_new (RSDCommandLine);
+	RSDEval_init (RSDEval, RSDCommandLine);
+	RSDEval_calculateDetectionMetricsConfigure (RSDCommandLine);
+			
+#ifdef _RSDAI
+	RSDNeuralNetwork_t * RSDNeuralNetwork = RSDNeuralNetwork_new (RSDCommandLine);
+	RSDNeuralNetwork_init (RSDNeuralNetwork, RSDCommandLine, RAiSD_Info_FP);
+	RSDNeuralNetwork_train (RSDNeuralNetwork, RSDCommandLine, RAiSD_Info_FP);
+	RSDNeuralNetwork_test (RSDNeuralNetwork, RSDCommandLine, RAiSD_Info_FP);
+	
+	if(RSDCommandLine->opCode==OP_TRAIN_CNN)
+	{
+		if(RSDNeuralNetwork_modelExists(RSDNeuralNetwork->modelPath)!=1)
+		{
+			char trainCommand[STRING_SIZE];
+			RSDNeuralNetwork_createTrainCommand (RSDNeuralNetwork, RSDCommandLine, trainCommand, 1);
+
+			fprintf(RAiSD_Info_FP, "\nERROR: Model generation failed. The CNN did not train correctly.\n\nUse this command to see Python errors: %s\n\n", trainCommand);
+			fprintf(stderr, "\nERROR: Model generation failed. The CNN did not train correctly.\n\nUse this command to see Python errors: %s\n\n", trainCommand);
+			exit(0);
+		}		
+	
+		fprintf(stdout, "\n");
+		fprintf(stdout, " Output directory    :\t%s\n", RSDNeuralNetwork->modelPath);
+				
+		fprintf(RAiSD_Info_FP, "\n");
+		fprintf(RAiSD_Info_FP, " Output directory: %s\n", RSDNeuralNetwork->modelPath);
+	}		
+	
+	if(RSDCommandLine->opCode==OP_TRAIN_CNN || RSDCommandLine->opCode==OP_TEST_CNN)
+	{
+		RSD_printTime(stdout, RAiSD_Info_FP);
+		RSD_printMemory(stdout, RAiSD_Info_FP);
+		fclose(RAiSD_Info_FP);
+		
+		RSDCommandLine_free(RSDCommandLine);
+		RSDNeuralNetwork_free(RSDNeuralNetwork);
+		
+		return 0;
+	}	
+#endif	
+
+	RSDPlot_generateRscript(RSDCommandLine, RSDPLOT_BASIC_MU);
 
 	RSDCommonOutliers_t * RSDCommonOutliers = RSDCommonOutliers_new ();
 	RSDCommonOutliers_init (RSDCommonOutliers, RSDCommandLine);
@@ -160,26 +181,46 @@ int main (int argc, char ** argv)
 
 	RSDPlot_printRscriptVersion (RSDCommandLine, stdout);
 	RSDPlot_printRscriptVersion (RSDCommandLine, RAiSD_Info_FP);
+	
+#ifdef _RSDAI
+	RSDImage_t * RSDImage = RSDImage_new (RSDCommandLine);	
+	RSDImage_makeDirectory (RSDImage, RSDCommandLine);
+	
+	RSDImage_print (RSDImage, RSDCommandLine, stdout);
+	RSDImage_print (RSDImage, RSDCommandLine, RAiSD_Info_FP); 
+		
+	RSDGrid_t * RSDGrid = RSDGrid_new (RSDCommandLine);
+	RSDGrid_makeDirectory (RSDGrid, RSDCommandLine, RSDImage); 
+	
+	RSDResults_t * RSDResults = RSDResults_new (RSDCommandLine);
+	RSDResults_setGridSize (RSDResults, RSDCommandLine);
+	
+	RSDGridPoint_write2FileConfigure (RSDCommandLine);
+#endif	
 
 	RSDCommandLine_printWarnings (RSDCommandLine, argc, argv, (void*)RSDDataset, stdout);
 	RSDCommandLine_printWarnings (RSDCommandLine, argc, argv, (void*)RSDDataset, RAiSD_Info_FP);
-
+	
 	RSDPatternPool_t * RSDPatternPool = RSDPatternPool_new(RSDCommandLine); // RSDCommandLine here only for vcf2ms conversion
 	RSDPatternPool_init(RSDPatternPool, RSDCommandLine, RSDDataset->numberOfSamples);
 	RSDPatternPool_print(RSDPatternPool, stdout);
-	RSDPatternPool_print(RSDPatternPool, RAiSD_Info_FP);
+	RSDPatternPool_print(RSDPatternPool, RAiSD_Info_FP);	
 
 	RSDChunk_t * RSDChunk = RSDChunk_new();
-	RSDChunk_init(RSDChunk, RSDDataset->numberOfSamples, RSDCommandLine->createPatternPoolMask);
-
-	RSDMuStat_t * RSDMuStat = RSDMuStat_new();
-	RSDMuStat_setReportName (RSDMuStat, RSDCommandLine, RAiSD_Info_FP);
+	RSDChunk_init(RSDChunk, RSDCommandLine, RSDDataset->numberOfSamples);
+	
+	RSDMuStat_t * RSDMuStat = RSDMuStat_new();	
+	RSDMuStat_setReportName (RSDMuStat, RSDCommandLine, RAiSD_Info_FP);	
 	RSDMuStat_loadExcludeTable (RSDMuStat, RSDCommandLine);	
 	
 	RSDVcf2ms_t * RSDVcf2ms = RSDVcf2ms_new (RSDCommandLine);	
 
-	int setIndex = -1, setDone = 0, setsProcessedTotal=0;
-
+	int setIndex = -1, validSetIndex = -1, setDone = 0, setsProcessedTotal=0; // validsetindex is used with the RSDResults_t struct
+			
+#ifdef _RSDAI
+	int warningMsgEn=1;
+#endif	
+	
 	// Set processing
 	while(RSDDataset_goToNextSet(RSDDataset)!=EOF) 
 	{
@@ -190,15 +231,35 @@ int main (int argc, char ** argv)
 		if(setIndexValid!=-1 && setIndex!=setIndexValid)
 		{
 			char tchar = (char)fgetc(RSDDataset->inputFilePtr); // Note: this might generate a segfault with MakefileZLIB
-			tchar = tchar;
+			tchar = tchar - tchar;
+			assert(tchar==0);
 		}
 
 		if(setIndexValid==-1 || setIndex == setIndexValid)
 		{
+		
+#if _RSDAI
+			validSetIndex++;
+			
+			RSDResults_incrementSetCounter (RSDResults);
+			RSDResults_saveSetID (RSDResults, RSDDataset);
+						
+			if(RSDCommandLine->opCode==OP_DEF)
+			{
+				RSDMuStat_setReportNamePerSet (RSDMuStat, RSDCommandLine, RAiSD_Info_FP, RSDDataset, RSDCommonOutliers);
+				
+				assert(RSDMuStat->reportFP!=NULL);
+			
+				if(RSDCommandLine->setSeparator)
+					fprintf(RSDMuStat->reportFP, "// %s\n", RSDDataset->setID);
+			
+			}
+#else
 			RSDMuStat_setReportNamePerSet (RSDMuStat, RSDCommandLine, RAiSD_Info_FP, RSDDataset, RSDCommonOutliers);
-
+			
 			if(RSDCommandLine->setSeparator)
 				fprintf(RSDMuStat->reportFP, "// %s\n", RSDDataset->setID);
+#endif				
 
 			RSDMuStat_init (RSDMuStat, RSDCommandLine);
 			RSDMuStat_excludeRegion (RSDMuStat, RSDDataset);
@@ -211,11 +272,34 @@ int main (int argc, char ** argv)
 			RSDPatternPool_reset(RSDPatternPool, RSDDataset->numberOfSamples, RSDDataset->setSamples, RSDChunk, RSDCommandLine);	
 
 			setDone = RSDDataset_getFirstSNP(RSDDataset, RSDPatternPool, RSDChunk, RSDCommandLine, RSDCommandLine->regionLength, RSDCommandLine->maf, RAiSD_Info_FP);
+#if _RSDAI
+			if(RSDCommandLine->opCode==OP_USE_CNN && RSDNeuralNetwork->imageHeight!=RSDDataset->numberOfSamples)
+			{
+				if(RSDNeuralNetwork->dataFormat==1 && RSDNeuralNetwork->dataType==1 && warningMsgEn==1)
+				{
+					warningMsgEn = 0;
+					
+					fprintf(RAiSD_Info_FP, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected! \n\n", RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);		
+					fprintf(stderr, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected!\n\n", RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);
+				}
+				else
+				{
+					if(!(RSDNeuralNetwork->dataFormat==1 && RSDNeuralNetwork->dataType==1))
+					{
+						fprintf(RAiSD_Info_FP, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);		
+						fprintf(stderr, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);
+		
+						exit(0);
+					}
+				}
+			}	
+#endif			
 			if(setDone)
 			{
-				if(RSDCommandLine->displayProgress==1)
-				fprintf(stdout, "\n %d: Set %s | sites %d | snps %d | region %lu - skipped", setIndex, RSDDataset->setID, (int)RSDDataset->setSize, (int)RSDDataset->setSNPs, RSDDataset->setRegionLength);
-				fprintf(RAiSD_Info_FP, "\n %d: Set %s | sites %d | snps %d | region %lu - skipped", setIndex, RSDDataset->setID, (int)RSDDataset->setSize, (int)RSDDataset->setSNPs, RSDDataset->setRegionLength);
+		      		RSDDataset_writeOutput (RSDDataset, setIndex, RAiSD_Info_FP);
+		      		
+		      		if(RSDCommandLine->displayProgress==1)	
+					RSDDataset_writeOutput (RSDDataset, setIndex, stdout);										      
 
 				if(RSDCommandLine->displayDiscardedReport==1)
 					RSDDataset_printSiteReport (RSDDataset, RAiSD_SiteReport_FP, setIndex, RSDCommandLine->imputePerSNP, RSDCommandLine->createPatternPoolMask);
@@ -237,8 +321,8 @@ int main (int argc, char ** argv)
 #endif
 			RSDPatternPool_pushSNP (RSDPatternPool, RSDChunk, RSDDataset->setSamples, RSDCommandLine, (void*)RSDVcf2ms);
 
-			int sitesloaded = 0;
-			int patternsloaded = 0;
+			//int sitesloaded = 0;
+			//int patternsloaded = 0;
 			
 			// Chunk processing
 			while(!setDone) 
@@ -247,7 +331,7 @@ int main (int argc, char ** argv)
 
 				if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT && RSDChunk->chunkID!=0)
 				{
-					fprintf(stderr, "\nERROR: Insufficient memory size provided through -Q for VCF to ms conversion!\n\n");
+					fprintf(stderr, "\nERROR: Insufficient memory size provided through -Q for VCF-to-ms conversion!\n\n");
 					exit(0);
 				}
 
@@ -268,87 +352,80 @@ int main (int argc, char ** argv)
 					//printf("%d - %d vs %d\n", RSDChunk->chunkID, (int)RSDDataset->setSNPs, (int)RSDDataset->preLoadedsetSNPs);
 					//fflush(stdout);
 
-					assert((uint64_t)RSDDataset->setSNPs==RSDDataset->preLoadedsetSNPs);
+					assert((uint64_t)RSDDataset->setSNPs==RSDDataset->preLoadedsetSNPs); // Fails when ms contains monomorphic sites
 				}
 
 #ifdef _PTIMES
 				clock_gettime(CLOCK_REALTIME, &requestStartMu);
 #endif
+
+#ifdef _RSDAI				
+				switch(RSDCommandLine->opCode)
+				{
+					case OP_CREATE_IMAGES:								
+						RSDImage_init (RSDImage, RSDDataset, RSDMuStat, RSDPatternPool, RSDCommandLine, RSDChunk, validSetIndex, RAiSD_Info_FP);
+						
+						RSDImage_generateFullFrame (RSDImage, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RAiSD_Info_FP, RSDImage->destinationPath, 0, validSetIndex);		
+						
+						if((RSDCommandLine->fullFrame==0) && (RSDImage->generatedSetImages != RSDCommandLine->imagesPerSimulation))
+						{
+						 	RSDGridPoint_t * RSDGridPoint = RSDGridPoint_compute((void*)RSDImage, RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, 
+						 										   RSDCommandLine, 
+						 										   RAiSD_Info_FP, 
+						 										   RSDCommandLine->imageTargetSite, 
+						 										   RSDImage->destinationPath, 
+						 										   0, validSetIndex); 		
+							RSDGridPoint_free(RSDGridPoint);
+						}												
+						break;
+												
+					case OP_USE_CNN:
+						RSDImage_init (RSDImage, RSDDataset, RSDMuStat, RSDPatternPool, RSDCommandLine, RSDChunk, validSetIndex, RAiSD_Info_FP);					
+						RSDGrid_init (RSDGrid, RSDDataset, RSDChunk, RSDMuStat, RSDCommandLine, setDone);
+						RSDGrid_processChunk (RSDGrid, RSDImage, RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RSDResults);
+						break;
+					
+					default: // OP_DEF 
+						if(RSDCommandLine->gridSize==-1)
+						{	
+							// sliding-window mu
+							RSDMuStat_scanChunk (RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RAiSD_Info_FP); 			
+						}
+						else
+						{
+							// grid-based mu
+							RSDGrid_init (RSDGrid, RSDDataset, RSDChunk, RSDMuStat, RSDCommandLine, setDone);
+							int firstGridPointIndexInChunk =  RSDMuStat->currentScoreIndex+1;
+							// RSDGrid_processChunk stores scores in both RSDResults and RSDMuStat for backwards compatibility 													
+							RSDGrid_processChunk (RSDGrid, RSDImage, RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RSDResults);	
+							RSDResults_processSet (RSDResults, RSDCommandLine, RSDMuStat, validSetIndex, RSDGrid->size, firstGridPointIndexInChunk); 
+						}
+						break;
+				}
+#else
 				// Compute Mu statistic
 				RSDMuStat_scanChunk (RSDMuStat, RSDChunk, RSDPatternPool, RSDDataset, RSDCommandLine, RAiSD_Info_FP);
+#endif			
 #ifdef _PTIMES
 				clock_gettime(CLOCK_REALTIME, &requestEndMu);
 				double MuTime = (requestEndMu.tv_sec-requestStartMu.tv_sec)+ (requestEndMu.tv_nsec-requestStartMu.tv_nsec) / BILLION;
 				TotalMuTime += MuTime;
 #endif
-				sitesloaded+=RSDChunk->chunkSize;
-				patternsloaded += RSDPatternPool->dataSize;
+				//sitesloaded+=RSDChunk->chunkSize;
+				//patternsloaded += RSDPatternPool->dataSize;
 
 				RSDChunk_reset(RSDChunk, RSDCommandLine);
 				RSDPatternPool_reset(RSDPatternPool, RSDDataset->numberOfSamples, RSDDataset->setSamples, RSDChunk, RSDCommandLine);
 			}
-
-			// Dist and Succ
-			if(selectionTarget!=0ull)
-			{
-				MuVar_Accum += DIST (RSDMuStat->muVarMaxLoc, (double)selectionTarget);
-				if(selectionTargetDThreshold!=0ull)
-				{
-					if(DIST (RSDMuStat->muVarMaxLoc, (double)selectionTarget)<=selectionTargetDThreshold)
-						MuVar_Success += 1.0;
-				}
-
-				MuSfs_Accum += DIST (RSDMuStat->muSfsMaxLoc, (double)selectionTarget);
-				if(selectionTargetDThreshold!=0ull)
-				{
-					if(DIST (RSDMuStat->muSfsMaxLoc, (double)selectionTarget)<=selectionTargetDThreshold)
-						MuSfs_Success += 1.0;
-				}
-
-				MuLd_Accum += DIST (RSDMuStat->muLdMaxLoc, (double)selectionTarget);
-				if(selectionTargetDThreshold!=0ull)
-				{
-					if(DIST (RSDMuStat->muLdMaxLoc, (double)selectionTarget)<=selectionTargetDThreshold)
-						MuLd_Success += 1.0;
-				}
-
-				Mu_Accum += DIST (RSDMuStat->muMaxLoc, (double)selectionTarget);
-				if(selectionTargetDThreshold!=0ull)
-				{
-					if(DIST (RSDMuStat->muMaxLoc, (double)selectionTarget)<=selectionTargetDThreshold)
-						Mu_Success += 1.0;
-				}
-			}
-
-			RSDMuStat_writeBuffer2File (RSDMuStat, RSDCommandLine);
-
-			if(RSDCommandLine->createPlot==1)
-				RSDPlot_createPlot (RSDCommandLine, RSDDataset, RSDMuStat, RSDCommonOutliers, RSDPLOT_BASIC_MU);
-
-			setsProcessedTotal++;
-
-			if(RSDCommandLine->displayProgress==1)
-				fprintf(stdout, "\n %d: Set %s | sites %d | snps %d | region %lu - Var %.0f %.3e | SFS %.0f %.3e | LD %.0f %.3e | MuStat %.0f %.3e", setIndex, RSDDataset->setID, (int)RSDDataset->setSize, (int)RSDDataset->setSNPs, RSDDataset->setRegionLength, (double)RSDMuStat->muVarMaxLoc, (double)RSDMuStat->muVarMax, (double)RSDMuStat->muSfsMaxLoc, (double)RSDMuStat->muSfsMax, (double)RSDMuStat->muLdMaxLoc, (double)RSDMuStat->muLdMax, (double)RSDMuStat->muMaxLoc, (double)RSDMuStat->muMax);
-
-			fflush(stdout);
-
+			
+			if(RSDCommandLine->opCode==OP_DEF && RSDCommandLine->createPlot==1) 
+				RSDPlot_createPlot (RSDCommandLine, RSDDataset, RSDMuStat, RSDCommonOutliers, RSDPLOT_BASIC_MU, NULL);
+				
 			if(RSDCommandLine->displayDiscardedReport==1)
 				RSDDataset_printSiteReport (RSDDataset, RAiSD_SiteReport_FP, setIndex, RSDCommandLine->imputePerSNP, RSDCommandLine->createPatternPoolMask);
 
-			RSDDataset_resetSiteCounters (RSDDataset);			
-
-			fprintf(RAiSD_Info_FP, "\n %d: Set %s | sites %d | snps %d | region %lu - Var %.0f %.3e | SFS %.0f %.3e | LD %.0f %.3e | MuStat %.0f %.3e", setIndex, RSDDataset->setID, (int)RSDDataset->setSize, (int)RSDDataset->setSNPs, RSDDataset->setRegionLength, (double)RSDMuStat->muVarMaxLoc, (double)RSDMuStat->muVarMax, (double)RSDMuStat->muSfsMaxLoc, (double)RSDMuStat->muSfsMax, (double)RSDMuStat->muLdMaxLoc, (double)RSDMuStat->muLdMax, (double)RSDMuStat->muMaxLoc, (double)RSDMuStat->muMax);
-
-			fflush(RAiSD_Info_FP);
-
-			// FPR/TPR
-			if(fpr_loc>0.0)
-				scr_svec = putInSortVector(&scr_svec_sz, scr_svec, RSDMuStat->muMax);
-
-			if(tpr_thres>0.0)
-				if(RSDMuStat->muMax>=(float)tpr_thres)
-					tpr_scr += 1.0;
-
+			RSDDataset_resetSiteCounters (RSDDataset);
+			
 			// VCF2MS
 			if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT)
 			{
@@ -363,73 +440,89 @@ int main (int argc, char ** argv)
 
 				RSDVcf2ms_reset (RSDVcf2ms);
 			}
+			
+			// PRINT MAX SCORES OR IMAGE COUNT TO INFO FILE
+			if(RSDCommandLine->opCode==OP_CREATE_IMAGES || RSDCommandLine->opCode==OP_USE_CNN)
+				RSDImage_writeOutput (RSDImage, RSDCommandLine, RSDDataset, setIndex, RAiSD_Info_FP);
+			else			
+				RSDMuStat_writeOutput (RSDMuStat, RSDDataset, setIndex, RAiSD_Info_FP);
+				
+			// EVALUATION (for standard sliding-window and grid without CNN)
+			if(RSDCommandLine->opCode==OP_DEF)
+			{
+				if(RSDCommandLine->gridSize==-1)
+					RSDEval_calculateDetectionMetrics (RSDEval, (void*)RSDMuStat);
+				else
+					RSDEval_calculateDetectionMetrics (RSDEval, (void*)RSDResults);
+			}
+
+			// PRINT MAX SCORES OR IMAGE COUNT TO STDOUT
+			if(RSDCommandLine->displayProgress==1)
+			{			
+				if(RSDCommandLine->opCode==OP_CREATE_IMAGES || RSDCommandLine->opCode==OP_USE_CNN)
+					RSDImage_writeOutput (RSDImage, RSDCommandLine, RSDDataset, setIndex, stdout);
+				else			
+					RSDMuStat_writeOutput (RSDMuStat, RSDDataset, setIndex, stdout);
+			}
+			
+			setsProcessedTotal++;			
 
 			if(setIndex == setIndexValid)
-				break;
-		}			
-	}
-
-	fprintf(stdout, "\n\n");
-	fprintf(stdout, " Sets (total):     %d\n", setIndex+1);
-	fprintf(stdout, " Sets (processed): %d\n", setsProcessedTotal);
-	fprintf(stdout, " Sets (skipped):   %d\n", setIndex+1-setsProcessedTotal);
-
-	fprintf(RAiSD_Info_FP, "\n\n");
-	fprintf(RAiSD_Info_FP, " Sets (total):     %d\n", setIndex+1);
-	fprintf(RAiSD_Info_FP, " Sets (processed): %d\n", setsProcessedTotal);
-	fprintf(RAiSD_Info_FP, " Sets (skipped):   %d\n", setIndex+1-setsProcessedTotal);
-
-	fflush(stdout);
-	fflush(RAiSD_Info_FP);
-
-	if(selectionTarget!=0ull)
+				break;	
+		}		
+	}	
+			
+#ifdef _RSDAI
+	if(RSDCommandLine->opCode==OP_USE_CNN)
 	{
-		fprintf(stdout, "\n");
-		fprintf(stdout, " AVERAGE DISTANCE (Target %lu)\n mu-VAR\t%.3f\n mu-SFS\t%.3f\n mu-LD\t%.3f\n MuStat\t%.3f\n", selectionTarget, MuVar_Accum/setsProcessedTotal, MuSfs_Accum/setsProcessedTotal, MuLd_Accum/setsProcessedTotal, Mu_Accum/setsProcessedTotal);
+		RSDNeutralNetwork_run (RSDNeuralNetwork, RSDCommandLine, (void*)RSDGrid, RAiSD_Info_FP);
+		
+		if(!strcmp(RSDNeuralNetwork->networkArchitecture, ARC_SWEEPNETRECOMB))
+			RSDResults_load_2x2 (RSDResults, RSDCommandLine);
+		else
+			RSDResults_load (RSDResults, RSDCommandLine);			
 
-		if(selectionTargetDThreshold!=0ull)
-		{
+		/* this function processes all sets - USE-CNN only*/	
+		RSDResults_process (RSDResults, RSDNeuralNetwork, RSDCommandLine, RSDDataset, RSDMuStat, RSDCommonOutliers, RSDEval); 
+	}	
+#endif	
+
+	fprintf(stdout, "\n");
+	fprintf(stdout, " Sets (total)         :\t%d\n", setIndex+1);
+	fprintf(stdout, " Sets (processed)     :\t%d\n", setsProcessedTotal);
+	fprintf(stdout, " Sets (not processed) :\t%d\n", setIndex+1-setsProcessedTotal);
+
+	fprintf(RAiSD_Info_FP, "\n");
+	fprintf(RAiSD_Info_FP, " Sets (total)         :\t%d\n", setIndex+1);
+	fprintf(RAiSD_Info_FP, " Sets (processed)     :\t%d\n", setsProcessedTotal);
+	fprintf(RAiSD_Info_FP, " Sets (not processed) :\t%d\n", setIndex+1-setsProcessedTotal);
+	
+#ifdef _RSDAI
+	switch(RSDCommandLine->opCode)
+	{
+		case OP_CREATE_IMAGES:
+		
 			fprintf(stdout, "\n");
-			fprintf(stdout, " SUCCESS RATE (Distance %lu)\n mu-VAR\t%.3f\n mu-SFS\t%.3f\n mu-LD\t%.3f\n MuStat\t%.3f\n", selectionTargetDThreshold, MuVar_Success/setsProcessedTotal, MuSfs_Success/setsProcessedTotal, MuLd_Success/setsProcessedTotal, Mu_Success/setsProcessedTotal);
-		}
-
-		fprintf(RAiSD_Info_FP, "\n");
-		fprintf(RAiSD_Info_FP, " AVERAGE DISTANCE (Target %lu)\n mu-VAR\t%.3f\n mu-SFS\t%.3f\n mu-LD\t%.3f\n MuStat\t%.3f\n", selectionTarget, MuVar_Accum/setsProcessedTotal, MuSfs_Accum/setsProcessedTotal, MuLd_Accum/setsProcessedTotal, Mu_Accum/setsProcessedTotal);
-
-		if(selectionTargetDThreshold!=0ull)
-		{
+			fprintf(stdout, " Output directory     :\t%s\n", RSDImage->destinationPath);
+			fprintf(stdout, " Data information     :\tRAiSD_Images.%s/info.txt\n", RSDCommandLine->runName); 
+			fprintf(stdout, " Images (total)       :\t%lu\n", RSDImage->totalGeneratedImages);
+			
 			fprintf(RAiSD_Info_FP, "\n");
-			fprintf(RAiSD_Info_FP, " SUCCESS RATE (Distance %lu)\n mu-VAR\t%.3f\n mu-SFS\t%.3f\n mu-LD\t%.3f\n MuStat\t%.3f\n", selectionTargetDThreshold, MuVar_Success/setsProcessedTotal, MuSfs_Success/setsProcessedTotal, MuLd_Success/setsProcessedTotal, Mu_Success/setsProcessedTotal);
-		}
-	}
-
-	if(fpr_loc>0.0)
-	{	
-		fprintf(stdout, "\n");
-		fprintf(stdout, " SORTED DATA (FPR %f)\n Size\t\t\t%d\n Highest Score\t\t%.9f\n Lowest Score\t\t%.9f\n FPR Threshold\t\t%.9f\n Threshold Location\t%d\n", fpr_loc, scr_svec_sz, (double)scr_svec[0],(double)scr_svec[scr_svec_sz-1], (double)scr_svec[(int)(scr_svec_sz*fpr_loc)], (int)(scr_svec_sz*fpr_loc));
-
-		fprintf(RAiSD_Info_FP, "\n");
-		fprintf(RAiSD_Info_FP, " SORTED DATA (FPR %f)\n Size\t\t\t%d\n Highest Score\t\t%.9f\n Lowest Score\t\t%.9f\n FPR Threshold\t\t%.9f\n Threshold Location\t%d\n", fpr_loc, scr_svec_sz, (double)scr_svec[0], (double)scr_svec[scr_svec_sz-1], (double)scr_svec[(int)(scr_svec_sz*fpr_loc)], (int)(scr_svec_sz*fpr_loc));
-	}
-
-	if(tpr_thres>0.0)
-	{
-		fprintf(stdout, "\n");
-		fprintf(stdout, " SCORE COUNT (Threshold %f)\n TPR\t%f\n", tpr_thres, tpr_scr/setsProcessedTotal);
-
-		fprintf(RAiSD_Info_FP, "\n");
-		fprintf(RAiSD_Info_FP, " SCORE COUNT (Threshold %f)\n TPR\t%f\n", tpr_thres, tpr_scr/setsProcessedTotal);
-	}
+			fprintf(RAiSD_Info_FP, " Output directory     :\t%s\n", RSDImage->destinationPath);
+			fprintf(RAiSD_Info_FP, " Data information     :\tRAiSD_Images.%s/info.txt\n", RSDCommandLine->runName);
+			fprintf(RAiSD_Info_FP, " Images (total)       :\t%lu\n", RSDImage->totalGeneratedImages);
+			
+			break;
+		default:
+			break;
+	}		
+#endif
 
 	fflush(stdout);
 	fflush(RAiSD_Info_FP);
 
-	//if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT)
-	//{
-	//	fclose(RSDVcf2ms->outputFilePtr);
-
-	//	//TODO free memory here
-	//}
+	RSDEval_print (RSDEval, (void*)RSDNeuralNetwork, RSDCommandLine, setsProcessedTotal, stdout);
+	RSDEval_print (RSDEval, (void*)RSDNeuralNetwork, RSDCommandLine, setsProcessedTotal, RAiSD_Info_FP);	
 
 	RSDVcf2ms_free (RSDVcf2ms, RSDCommandLine);
 
@@ -438,24 +531,27 @@ int main (int argc, char ** argv)
 	if(RSDCommandLine->createMPlot==1)
 	{
 		RSDPlot_generateRscript(RSDCommandLine, RSDPLOT_MANHATTAN);
-		RSDPlot_createPlot (RSDCommandLine, RSDDataset, RSDMuStat, RSDCommonOutliers, RSDPLOT_MANHATTAN);		
+		RSDPlot_createPlot (RSDCommandLine, RSDDataset, RSDMuStat, RSDCommonOutliers, RSDPLOT_MANHATTAN, NULL);		
 		RSDPlot_removeRscript(RSDCommandLine, RSDPLOT_MANHATTAN);
 	}
 
 	if(RSDCommandLine->createCOPlot==1)
-	{
 		RSDCommonOutliers_process (RSDCommonOutliers, RSDCommandLine);
-	}
+	
+#ifdef _RSDAI
+	RSDImage_free (RSDImage);
+	RSDNeuralNetwork_free(RSDNeuralNetwork);
+	RSDGrid_free (RSDGrid);
+	RSDResults_free (RSDResults);
+	RSDEval_free (RSDEval);
+#endif
 
 	RSDCommonOutliers_free (RSDCommonOutliers);
 	RSDCommandLine_free(RSDCommandLine);
 	RSDPatternPool_free(RSDPatternPool);
-	RSDChunk_free(RSDChunk, RSDDataset->setSamples);
+	RSDChunk_free(RSDChunk);
 	RSDDataset_free(RSDDataset);
 	RSDMuStat_free(RSDMuStat);
-
-	if(scr_svec!=NULL)
-		free(scr_svec);	
 	
 	RSD_printTime(stdout, RAiSD_Info_FP);
 	RSD_printMemory(stdout, RAiSD_Info_FP);

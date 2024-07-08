@@ -123,7 +123,7 @@ void RSDPatternPool_init (RSDPatternPool_t * RSDPatternPool, RSDCommandLine_t * 
 
 	float maxSNPsInPool_num = ((float)RSDPatternPool->memorySize)*1024.0f*1024.0f;
 	float maxSNPsInPool = maxSNPsInPool_num/(wordsPerSNP*8.0f+8.0f); // +8 for the allelecount and the patterncount
-	RSDPatternPool->maxSize = (int) maxSNPsInPool;
+	RSDPatternPool->maxSize = (int) maxSNPsInPool; 
 
 	RSDPatternPool->incomingSite = (char*) rsd_malloc(sizeof(char)*((unsigned long)(numberOfSamples+1)));
 	assert(RSDPatternPool->incomingSite!=NULL);
@@ -181,7 +181,6 @@ void RSDPatternPool_init (RSDPatternPool_t * RSDPatternPool, RSDCommandLine_t * 
 	else
 		assert(0);
 #endif
-
 }
 
 void RSDPatternPool_resize (RSDPatternPool_t * RSDPatternPool, int64_t setSamples, FILE * fpOut)
@@ -198,7 +197,6 @@ void RSDPatternPool_resize (RSDPatternPool_t * RSDPatternPool, int64_t setSample
 	float maxSNPsInPool_num = ((float)RSDPatternPool->memorySize)*1024.0f*1024.0f;
 	float maxSNPsInPool = maxSNPsInPool_num/(wordsPerSNP*8.0f+8.0f); // +8 for the allelecount and the patterncount
 	RSDPatternPool->maxSize = (int) maxSNPsInPool;
-	prevMaxSize = prevMaxSize;
 	assert(RSDPatternPool->maxSize<=prevMaxSize);
 
 	free(RSDPatternPool->incomingSiteCompact);
@@ -339,8 +337,6 @@ void RSDPatternPool_partialReset (RSDPatternPool_t * RSDPatternPool)
 void RSDPatternPool_reset (RSDPatternPool_t * RSDPatternPool, int64_t numberOfSamples, int64_t setSamples, RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine)
 {
 	assert(RSDCommandLine!=NULL);
-
-	RSDCommandLine = RSDCommandLine;
 
 	int i;
 
@@ -779,7 +775,14 @@ int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDC
 	
 		for(j=0;j<numberOfSamples;j++)
 		{
-			assert(RSDPatternPool->incomingSite[j]=='0' || RSDPatternPool->incomingSite[j]=='1');
+			if(RSDPatternPool->incomingSite[j]!='0' && RSDPatternPool->incomingSite[j]!='1')
+			{
+				printf("char %c found at %f\n", RSDPatternPool->incomingSite[j], RSDPatternPool->incomingSitePosition);
+				fflush(stdout);
+				
+				assert(RSDPatternPool->incomingSite[j]=='0' || RSDPatternPool->incomingSite[j]=='1');
+				
+			}
 
 			uint8_t b = (uint8_t)(RSDPatternPool->incomingSite[j]-48);	
 
@@ -888,78 +891,121 @@ int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDC
 	else
 	{
 		match = 0;
-		if(RSDPatternPool->createPatternPoolMask==1)
+		if(RSDCommandLine->fullFrame==1)
 		{
-			if(RSDPatternPool->patternPoolMaskMode==0)
-			{
-				for(i=0;i<RSDPatternPool->dataSize;i++) 
-				{
-					if(!snpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize))
-					{	
-						if(!snpv_cmp(&(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize))
-						{	
-							match=1;
-							break;
-						}
-					}
-				}
-
-				if(match==0)
-				for(i=0;i<RSDPatternPool->dataSize;i++) 
-				{
-					if(!snpv_cmp(&(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize))
-					{	
-						
-						if(!isnpv_cmp_with_mask(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize, (int)numberOfSamples))
-						{	
-							match=1;
-							break;
-						}
-					}
-				}
-			}
-			else
-			{
-				for(i=0;i<RSDPatternPool->dataSize;i++) 
-				{
-
-					if(!snpv_cmp_cross_masks(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), 
-								   RSDPatternPool->incomingSiteCompact, 
-								 &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), 
-								   RSDPatternPool->incomingSiteCompactMask, 
-								   RSDPatternPool->patternSize))
-					{	
-						match=1;
-						break;
-					}
-				}
-
-				if(match==0)
-				for(i=0;i<RSDPatternPool->dataSize;i++) 
-				{
-
-					if(!isnpv_cmp_cross_masks(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), 
-								   RSDPatternPool->incomingSiteCompact, 
-								 &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), 
-								   RSDPatternPool->incomingSiteCompactMask, 
-								   RSDPatternPool->patternSize))
-					{	
-						match=1;
-						break;
-					}
-				}
-			}
+			i = RSDPatternPool->dataSize;
 		}
 		else
 		{
-#ifdef _LM
-			if(newPattern)
+			if(RSDPatternPool->createPatternPoolMask==1)
 			{
-				match = 0;
-				i = RSDPatternPool->dataSize;
+				if(RSDPatternPool->patternPoolMaskMode==0)
+				{
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+						if(!snpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize))
+						{	
+							if(!snpv_cmp(&(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize))
+							{	
+								match=1;
+								break;
+							}
+						}
+					}
+
+					if(match==0)
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+						if(!snpv_cmp(&(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize))
+						{	
+							
+							if(!isnpv_cmp_with_mask(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompactMask, RSDPatternPool->patternSize, (int)numberOfSamples))
+							{	
+								match=1;
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+
+						if(!snpv_cmp_cross_masks(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), 
+									   RSDPatternPool->incomingSiteCompact, 
+									 &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), 
+									   RSDPatternPool->incomingSiteCompactMask, 
+									   RSDPatternPool->patternSize))
+						{	
+							match=1;
+							break;
+						}
+					}
+
+					if(match==0)
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+
+						if(!isnpv_cmp_cross_masks(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), 
+									   RSDPatternPool->incomingSiteCompact, 
+									 &(RSDPatternPool->poolDataMask[i*RSDPatternPool->patternSize]), 
+									   RSDPatternPool->incomingSiteCompactMask, 
+									   RSDPatternPool->patternSize))
+						{	
+							match=1;
+							break;
+						}
+					}
+				}
 			}
 			else
 			{
+	#ifdef _LM
+				if(newPattern)
+				{
+					match = 0;
+					i = RSDPatternPool->dataSize;
+				}
+				else
+				{
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+						if(!snpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize))
+						{	
+							match=1;
+							break;
+						}
+					}
+
+					if(match==0)
+					for(i=0;i<RSDPatternPool->dataSize;i++) 
+					{
+						if(!isnpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize, (int)numberOfSamples))
+						{	
+							match=1;
+							break;
+						}	
+					}
+				}
+	#else
+	#ifdef _TM
+				i = (int)RSDTreeMap_matchSNP (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
+				match = 1;
+
+				if(i==-1)
+				{
+					i = (int)RSDTreeMap_matchSNPC (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
+					match = 1;
+
+					if(i==-1)
+					{
+						i = (int)RSDTreeMap_updateTree (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
+						match = 0;
+					}
+				}
+
+	#else
 				for(i=0;i<RSDPatternPool->dataSize;i++) 
 				{
 					if(!snpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize))
@@ -978,45 +1024,9 @@ int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDC
 						break;
 					}	
 				}
+	#endif
+	#endif
 			}
-#else
-#ifdef _TM
-			i = (int)RSDTreeMap_matchSNP (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
-			match = 1;
-
-			if(i==-1)
-			{
-				i = (int)RSDTreeMap_matchSNPC (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
-				match = 1;
-
-				if(i==-1)
-				{
-					i = (int)RSDTreeMap_updateTree (RSDPatternPool->treeMap, (void *)RSDPatternPool, numberOfSamples);
-					match = 0;
-				}
-			}
-
-#else
-			for(i=0;i<RSDPatternPool->dataSize;i++) 
-			{
-				if(!snpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize))
-				{	
-					match=1;
-					break;
-				}
-			}
-
-			if(match==0)
-			for(i=0;i<RSDPatternPool->dataSize;i++) 
-			{
-				if(!isnpv_cmp(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, RSDPatternPool->patternSize, (int)numberOfSamples))
-				{	
-					match=1;
-					break;
-				}	
-			}
-#endif
-#endif
 		}
 
 		if(match)
@@ -1025,6 +1035,8 @@ int RSDPatternPool_pushSNP (RSDPatternPool_t * RSDPatternPool, RSDChunk_t * RSDC
 		}
 		else
 		{	
+			assert(i==RSDPatternPool->dataSize);
+			
 			memcpy(&(RSDPatternPool->poolData[i*RSDPatternPool->patternSize]), RSDPatternPool->incomingSiteCompact, (unsigned long)(RSDPatternPool->patternSize*8));
 
 			if(RSDPatternPool->createPatternPoolMask==1)
@@ -1153,8 +1165,6 @@ void RSDPatternPool_assessMissing  (RSDPatternPool_t * RSDPatternPool, int64_t n
 {
 	if(RSDPatternPool->createPatternPoolMask==0)
 		return;
-
-	numberOfSamples = numberOfSamples; 
 
 	int i;
 	for(i=0;i<RSDPatternPool->dataSize;i++)

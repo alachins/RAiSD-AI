@@ -66,7 +66,7 @@ void RSDPlot_printRscriptVersion (RSDCommandLine_t * RSDCommandLine, FILE * fpOu
 	if(RSDCommandLine->createPlot==0 && RSDCommandLine->createMPlot==0)
 		return;
 
-	fprintf(fpOut, " Rscript: ");
+	fprintf(fpOut, " Rscript version     :\t");
 
 	FILE * fp;
 	fp = fopen("RscriptVersion.txt", "r");
@@ -74,15 +74,13 @@ void RSDPlot_printRscriptVersion (RSDCommandLine_t * RSDCommandLine, FILE * fpOu
 	
 #ifdef _C1
 	int ret = system("Rscript --version > /dev/null 2>RscriptVersion.txt");
-	assert(ret!=-1);
-	ret = ret;
+	assert(ret!=-1);	
 #else
 	fp = popen("Rscript --version > /dev/null 2>RscriptVersion.txt", "r");
 	assert(fp!=NULL);
 
 	int ret = pclose(fp);
-	assert(ret!=-1);
-	ret = ret;
+	assert(ret!=-1);	
 #endif
 
 	fp = fopen("RscriptVersion.txt", "r");
@@ -150,10 +148,13 @@ void RSDPlot_generateRscript (RSDCommandLine_t * RSDCommandLine, int mode)
 	
 	fp = fopen(scriptName, "w");
 	assert(fp!=NULL);
-
-	if(mode==RSDPLOT_BASIC_MU)
+	
+	char * tscript = NULL;
+	
+	switch(mode)
 	{
-		const char * tscript = " \n \
+		case RSDPLOT_BASIC_MU:
+		tscript = " \n \
 args = commandArgs(trailingOnly=TRUE) \n \
 RUNNAME <- args[1] \n \
 ID <- args[2] \n \
@@ -173,7 +174,219 @@ plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xl
 plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"curve for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
 dev.off() \n";
 
+#ifdef _RSDAI
+		if(RSDCommandLine->opCode==OP_USE_CNN)
+		{
+			if(!strcmp(RSDCommandLine->networkArchitecture, ARC_SWEEPNETRECOMB))
+			{
+/*			tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+RUNNAME <- args[1] \n \
+ID <- args[2] \n \
+CLASSLABEL0 <- args[3] \n \
+CLASSLABEL1 <- args[4] \n \
+CLASSLABEL2 <- args[5] \n \
+CLASSLABEL3 <- args[6] \n \
+output_file <- paste(\"RAiSD_Plot.\", RUNNAME,\".\",ID,\".pdf\", sep=\"\") \n \
+RDPATH <- paste(\"RAiSD_Report.\",RUNNAME,\".\",ID, sep = \"\") \n \
+rsd_data <- read.table(RDPATH, header=F) \n \
+mup <- rsd_data[,1]/1000.0 \n \
+mu1 <- rsd_data[,4] \n \
+mu2 <- rsd_data[,5] \n \
+mu3 <- rsd_data[,6] \n \
+mu  <- rsd_data[,7] \n \
+nn0  <- rsd_data[,8] \n \
+nn1  <- rsd_data[,9] \n \
+nn2  <- rsd_data[,10] \n \
+nn3  <- rsd_data[,11] \n \
+pdf(output_file, width=20, height=10) \n \
+par(mfrow=c(2,4)) \n \
+plot(mup, mu1, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_var\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu2, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_sfs\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_sfs for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn0, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL0) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn1, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL1) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_ld for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn2, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL2) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn3, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL3) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+dev.off() \n";
+*/
+			tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+RUNNAME <- args[1] \n \
+ID <- args[2] \n \
+CLASSLABEL0 <- args[3] \n \
+CLASSLABEL1 <- args[4] \n \
+output_file <- paste(\"RAiSD_Plot.\", RUNNAME,\".\",ID,\".pdf\", sep=\"\") \n \
+RDPATH <- paste(\"RAiSD_Report.\",RUNNAME,\".\",ID, sep = \"\") \n \
+rsd_data <- read.table(RDPATH, header=F) \n \
+mup <- rsd_data[,1]/1000.0 \n \
+mu1 <- rsd_data[,4] \n \
+mu2 <- rsd_data[,5] \n \
+mu3 <- rsd_data[,6] \n \
+mu  <- rsd_data[,7] \n \
+nn0  <- rsd_data[,8] \n \
+nn1  <- rsd_data[,9] \n \
+pdf(output_file, width=15, height=10) \n \
+par(mfrow=c(2,3)) \n \
+plot(mup, mu1, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_var\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu2, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_sfs\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_sfs for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn0, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL0) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_ld for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn1, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL1) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+dev.off() \n";
+				
+			}
+			else
+			{
+			tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+RUNNAME <- args[1] \n \
+ID <- args[2] \n \
+CLASSLABEL <- args[3] \n \
+output_file <- paste(\"RAiSD_Plot.\", RUNNAME,\".\",ID,\".pdf\", sep=\"\") \n \
+RDPATH <- paste(\"RAiSD_Report.\",RUNNAME,\".\",ID, sep = \"\") \n \
+rsd_data <- read.table(RDPATH, header=F) \n \
+mup <- rsd_data[,1]/1000.0 \n \
+mu1 <- rsd_data[,4] \n \
+mu2 <- rsd_data[,5] \n \
+mu3 <- rsd_data[,6] \n \
+mu  <- rsd_data[,7] \n \
+nn  <- rsd_data[,8] \n \
+compnn  <- rsd_data[,9] \n \
+pdf(output_file, width=15, height=10) \n \
+par(mfrow=c(2,3)) \n \
+plot(mup, mu1, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_var\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu2, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_sfs\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_sfs for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_ld for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, compnn, col=\"black\", pch=16, cex = .6, ylab=bquote(compnn), xlab=\"Chromosome position (kb)\", main=bquote(\"Composite CNN -\" ~mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+dev.off() \n";	
+			}
+		}
+#endif
+	
+		break;
+		
+		case RSDPLOT_MANHATTAN:
+		tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+library(qqman) \n \
+RUNNAME <- args[1] \n \
+THRESHOLD <- args[2] \n \
+reportListN <- paste(\"RAiSD_ReportList.\", RUNNAME,\".txt\", sep=\"\") \n \
+reportList <- read.table(reportListN)[,1] \n \
+data <- data.frame(pos=c(), value=c(), chr=c()) \n \
+for (i in 1:length(reportList[])) { \n \
+d <- read.table(paste(reportList[i]), header=F, skip=0)[,1:7] \n \
+tmp.dat <- data.frame(pos=d[,1], value=d[,7]*1, chr=rep(i, length(d[,1]))) \n \
+data <- rbind(data, tmp.dat)} \n \
+output_file <- paste(\"RAiSD_ManhattanPlot.\", RUNNAME,\".pdf\", sep=\"\") \n \
+pdf(output_file) \n \
+snp <- 1:dim(data)[1] \n \
+mydf <- data.frame(snp, data) \n \
+thres<-as.numeric(THRESHOLD) \n \
+topQ<-thres*100 \n \
+threshold <- quantile(x=data$value, probs = thres) \n \
+title_msg <- paste(\"Manhattan plot for \", RUNNAME,\"\nthreshold=\",threshold,\" (\", topQ,\"%)\") \n \
+manhattan(mydf, chr=\"chr\", bp=\"pos\", cex = 0.5, p=\"value\", snp=\"snp\", logp=F,  ylab=bquote(mu ~ \"statistic\"), genomewideline = FALSE, suggestiveline = FALSE,pos=0, col=c(\"blue2\", \"darkorange1\"), ylim=c(0.0, max(data$value, na.rm = TRUE)*1.4)) \n \
+title(title_msg) \n \
+abline(h=threshold, col=\"red\", lw=2) \n \
+dev.off() \n";
+		break;
+		
+		case RSDPLOT_COMMONOUTLIERS:
+		tscript = "\n \
+ args = commandArgs(trailingOnly=TRUE) \n \
+ d1 <- read.table( paste(args[3]), header=F, skip=0)[,1:2] \n \
+ d2 <- read.table( paste(args[4]), header=F, skip=0)[,1:2] \n \
+ d3 <- read.table( paste(args[5]), header=F, skip=0)[,1:2] \n \
+ d4 <- read.table( paste(args[6]), header=F, skip=0)[,1:2] \n \
+ pdf(paste(args[7]) , width=7, height=7) \n \
+ par(mfrow=c(2,1)) \n \
+ plot(d1[,1], d1[,2], col=\"darkgray\", pch=16, ylab=\"\", xlab=\"\") \n \
+ points(d3[,1], d3[,2], col=\"red\", pch=19, cex=1.0) \n \
+ mtext(side=1, text=\"Position\", 2) \n \
+ mtext(side=2, text=\"SweeD\", 2) \n \
+ title(paste(\"SweeD-RAiSD common outliers for \", args[1], \" ( top \", args[2],\" )\", sep=\"\")) \n \
+ plot(d2[,1], d2[,2], col=\"darkgray\", pch=16, ylab=\"\", xlab=\"\") \n \
+ points(d4[,1], d4[,2], col=\"red\", pch=19, cex=1.0) \n \
+ mtext(side=1, text=\"Position\", 2) \n \
+ mtext(side=2, text=\"RAiSD\", 2) \n \
+ dev.off() \n";
+		break;
+		
+		default:
+			assert(0); 
+	
+	}
+	
+	fprintf(fp,"%s", tscript);
+	
+	fclose(fp);
+
+/*	if(mode==RSDPLOT_BASIC_MU)
+	{
+
+#ifdef _RSDAI
+		if(RSDCommandLine->opCode==OP_USE_CNN)
+		{
+		const char * tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+RUNNAME <- args[1] \n \
+ID <- args[2] \n \
+CLASSLABEL <- args[3] \n \
+output_file <- paste(\"RAiSD_Plot.\", RUNNAME,\".\",ID,\".pdf\", sep=\"\") \n \
+RDPATH <- paste(\"RAiSD_Report.\",RUNNAME,\".\",ID, sep = \"\") \n \
+rsd_data <- read.table(RDPATH, header=F) \n \
+mup <- rsd_data[,1]/1000.0 \n \
+mu1 <- rsd_data[,4] \n \
+mu2 <- rsd_data[,5] \n \
+mu3 <- rsd_data[,6] \n \
+mu  <- rsd_data[,7] \n \
+nn  <- rsd_data[,8] \n \
+compnn  <- rsd_data[,9] \n \
+pdf(output_file, width=15, height=10) \n \
+par(mfrow=c(2,3)) \n \
+plot(mup, mu1, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_var\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu2, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_sfs\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_sfs for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, nn, col=\"black\", pch=16, cex = .6, ylab=bquote(nn), xlab=\"Chromosome position (kb)\", main=bquote(Class ~ .(CLASSLABEL) ~ \"CNN scores for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_ld for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, compnn, col=\"black\", pch=16, cex = .6, ylab=bquote(compnn), xlab=\"Chromosome position (kb)\", main=bquote(\"Composite CNN -\" ~mu ~ \"_var for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+dev.off() \n";		
 		fprintf(fp,"%s", tscript);
+		}
+		else
+		{
+#endif		
+		const char * tscript = " \n \
+args = commandArgs(trailingOnly=TRUE) \n \
+RUNNAME <- args[1] \n \
+ID <- args[2] \n \
+output_file <- paste(\"RAiSD_Plot.\", RUNNAME,\".\",ID,\".pdf\", sep=\"\") \n \
+RDPATH <- paste(\"RAiSD_Report.\",RUNNAME,\".\",ID, sep = \"\") \n \
+rsd_data <- read.table(RDPATH, header=F) \n \
+mup <- rsd_data[,1]/1000.0 \n \
+mu1 <- rsd_data[,4] \n \
+mu2 <- rsd_data[,5] \n \
+mu3 <- rsd_data[,6] \n \
+mu  <- rsd_data[,7] \n \
+pdf(output_file, width=10, height=10) \n \
+par(mfrow=c(2,2)) \n \
+plot(mup, mu1, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_var\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_var curve for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu2, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_sfs\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_sfs curve for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu3, col=\"darkgray\", pch=16, cex = .6, ylab=bquote(mu ~ \"_ld\"), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"_ld curve for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+plot(mup, mu, col=\"black\", pch=16, cex = .6, ylab=bquote(mu), xlab=\"Chromosome position (kb)\", main=bquote(mu ~ \"curve for\" ~ .(RUNNAME) ~ \".\" ~ .(ID))) \n \
+dev.off() \n";
+		fprintf(fp,"%s", tscript);
+#ifdef _RSDAI
+		}
+#endif
+
+		
 	}
 
 	if(mode==RSDPLOT_MANHATTAN)
@@ -230,7 +443,8 @@ dev.off() \n";
 		fprintf(fp,"%s", tscript);
 	}
 
-	fclose(fp);	
+	fclose(fp);
+	*/	
 }
 
 void RSDPlot_removeRscript (RSDCommandLine_t * RSDCommandLine, int mode)
@@ -246,7 +460,6 @@ void RSDPlot_removeRscript (RSDCommandLine_t * RSDCommandLine, int mode)
 		fclose(fp);
 		int ret = remove(scriptName);
 		assert(ret==0);	
-		ret = ret;
 	}
 	fp=NULL;
 
@@ -258,14 +471,21 @@ void RSDPlot_removeRscript (RSDCommandLine_t * RSDCommandLine, int mode)
 			RSDPlot_createReportListName (RSDCommandLine, reportListName);
 			int ret = remove(reportListName);
 			assert(ret==0);
-			ret = ret;	
 		}
 		RAiSD_ReportList_FP=NULL;
 	}
 }
 
-void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, int mode)
+void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, int mode, void * nn)
 {
+	assert(RSDCommandLine!=NULL);
+	assert(RSDDataset!=NULL);
+	assert(RSDMuStat!=NULL);
+	assert(RSDCommonOutliers!=NULL);
+	
+	if(RSDCommandLine->createPlot!=1)
+		return;
+			
 	char tstring[STRING_SIZE];
 
 	char scriptName[STRING_SIZE]="RSDPlot.R";
@@ -279,6 +499,32 @@ void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDa
 		strcat(tstring, RSDCommandLine->runName);
 		strcat(tstring, " ");
 		strcat(tstring, RSDDataset->setID);
+#ifdef _RSDAI
+		if(RSDCommandLine->opCode==OP_USE_CNN)
+		{
+			RSDNeuralNetwork_t * RSDNeuralNetwork = (RSDNeuralNetwork_t *)nn;
+			
+			if(!strcmp(RSDCommandLine->networkArchitecture, ARC_SWEEPNETRECOMB))
+			{
+				strcat(tstring, " ");
+				strcat(tstring, RSDNeuralNetwork->classLabel[RSDCommandLine->positiveClassIndex[0]]); 
+				
+				strcat(tstring, " ");
+				strcat(tstring, RSDNeuralNetwork->classLabel[RSDCommandLine->positiveClassIndex[1]]); 
+				
+				//strcat(tstring, " ");
+				//strcat(tstring, RSDNeuralNetwork->classLabel[2]); 
+				
+				//strcat(tstring, " ");
+				//strcat(tstring, RSDNeuralNetwork->classLabel[3]);  
+			}
+			else
+			{
+				strcat(tstring, " ");
+				strcat(tstring, RSDNeuralNetwork->classLabel[RSDCommandLine->positiveClassIndex[0]]);
+			}			
+		}
+#endif
 		strcat(tstring, " > /dev/null 2>&1");
 	}
 
@@ -330,7 +576,6 @@ void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDa
 
 #ifdef _C1
 	int ret = system(tstring);
-	ret = ret;
 	assert(ret!=-1);
 #else
 	FILE *fp;

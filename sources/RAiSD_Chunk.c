@@ -40,24 +40,16 @@ RSDChunk_t * RSDChunk_new(void)
 	ch->patternID = NULL;	
 	
 	ch->chunkData = NULL;
-
+	
 	return ch;
 }
 
-void RSDChunk_free(RSDChunk_t * ch, int64_t numberOfSamples)
+void RSDChunk_free(RSDChunk_t * ch)
 {
 	assert(ch!=NULL);
-	assert(numberOfSamples!=0);
-
-	numberOfSamples = numberOfSamples;
-
-	//if(numberOfSamples!=-1)
-	//	MemoryFootprint += sizeof(fpos_t)*((unsigned long)numberOfSamples);
 	
 	if(ch->seqPosition!=NULL)
 		free(ch->seqPosition);
-
-	//MemoryFootprint += 3*sizeof(int)*((unsigned long)ch->chunkMemSize);
 
 	if(ch->sitePosition!=NULL)
 		free(ch->sitePosition);
@@ -74,18 +66,19 @@ void RSDChunk_free(RSDChunk_t * ch, int64_t numberOfSamples)
 	free(ch);
 }
 
-void RSDChunk_init(RSDChunk_t * RSDChunk, int64_t numberOfSamples, int64_t createPatternPoolMask)
+void RSDChunk_init(RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine, int64_t numberOfSamples)
 {
+	assert(RSDChunk!=NULL);
+	assert(RSDCommandLine!=NULL);
+	
 	RSDChunk->seqPosition = (fpos_t*)rsd_malloc(sizeof(fpos_t)*((unsigned long)numberOfSamples));
 	assert(RSDChunk->seqPosition!=NULL);
-
-	createPatternPoolMask = createPatternPoolMask;
 
 #ifdef _MLT
 
 	assert(0); // sitePosition was changed to double in version 2.5. MLT is in a proof-of-concept state.
 
-	if(createPatternPoolMask==1)
+	if(RSDCommandLine->createPatternPoolMask==1)
 	{
 		RSDChunk->sitePosition = (float*)rsd_malloc(sizeof(float)*((unsigned long)RSDChunk->chunkMemSize));
 		assert(RSDChunk->sitePosition != NULL);
@@ -102,7 +95,7 @@ void RSDChunk_init(RSDChunk_t * RSDChunk, int64_t numberOfSamples, int64_t creat
 		assert(RSDChunk->chunkData!=NULL);
 	}
 #else
-	assert(createPatternPoolMask==0 || createPatternPoolMask==1);
+	assert(RSDCommandLine->createPatternPoolMask==0 || RSDCommandLine->createPatternPoolMask==1);
 
 	RSDChunk->sitePosition = (double*)rsd_malloc(sizeof(double)*((unsigned long)RSDChunk->chunkMemSize));
 	assert(RSDChunk->sitePosition != NULL);
@@ -212,5 +205,4 @@ void RSDChunk_reset(RSDChunk_t * RSDChunk, RSDCommandLine_t * RSDCommandLine)
 		}
 #endif
 	}
-
 }

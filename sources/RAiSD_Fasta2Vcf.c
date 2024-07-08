@@ -52,9 +52,8 @@ int 			isValidDNACharacter				(char input);
 char 			getRandACGT 					(void);
 int 			seqOver 					(char state);
 int 			skipSequence 					(FILE * fp);
-void 			checkSequence 					(FILE * fp, double * percUN, double * percGAP, double * percACGT);
+//void 			checkSequence 					(FILE * fp, double * percUN, double * percGAP, double * percACGT);
 char 			getStateVCF					(char input, char refState, char altState);
-
 char			rsd2upper					(char in);
 
 int isACGT (char input)
@@ -144,6 +143,7 @@ inline char rsd2upper (char in)
 	return out;
 }
 
+/*
 void checkSequence (FILE * fp, double * percUN, double * percGAP, double * percACGT)
 {
 	assert(fp!=NULL);
@@ -193,6 +193,7 @@ void checkSequence (FILE * fp, double * percUN, double * percGAP, double * percA
 	
 	return;
 }
+*/
 
 char getStateVCF(char input, char refState, char altState)
 {
@@ -299,7 +300,6 @@ void RSDFastaStates_addState (RSDFastaStates_t * RSDFastaStates, char state, int
 
 		RSDFastaStates->statesCount[index]++;
 	}
-
 }
 
 void RSDFastaStates_free (RSDFastaStates_t * RSDFastaStates)
@@ -955,6 +955,11 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 			outgroup=1;
 
 			tstring[0] = (char)fgetc(fp); // \n newline
+			
+			if(tstring[0]=='\r')
+			{
+				tstring[0] = (char)fgetc(fp); // \n newline
+			}
 			assert(tstring[0]=='\n');
 
 			fgetpos(fp, &outseqPosition);
@@ -965,6 +970,12 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 			outgroup2=1;
 
 			tstring[0] = (char)fgetc(fp); // \n newline
+			
+			if(tstring[0]=='\r')
+			{
+				tstring[0] = (char)fgetc(fp); // \n newline
+			}
+			
 			assert(tstring[0]=='\n');
 
 			fgetpos(fp, &outseqPosition2);			
@@ -1040,6 +1051,12 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 			firstSeqOutgroup = 1;
 		
 			tstring[0] = (char)fgetc(fp); // \n newline
+			
+			if(tstring[0]=='\r')
+			{
+				tstring[0] = (char)fgetc(fp); // \n newline
+			}
+			
 			assert(tstring[0]=='\n');
 
 			fgetpos(fp, &outseqPosition);
@@ -1074,7 +1091,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 
 	while(!seqOver(tstring[0]))
 	{
-		if(tstring[0]!='\n')
+		if(tstring[0]!='\n' && tstring[0]!='\r')
 		{
 			tstring[0] = rsd2upper(tstring[0]);
 
@@ -1088,7 +1105,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 
 			tstring[0] = (char)(fgetc(fp));
 
-			if(tstring[0]!='\n' && !isValidDNACharacter(tstring[0]))
+			if(tstring[0]!='\n' && !isValidDNACharacter(tstring[0]) && tstring[0]!='\r')
 			{
 				fprintf(fpOut, "\n\nERROR: Invalid character (%c) found in sequence %s (outgroup)\n\n", tstring[0], RSDDataset->outgroupName);
 				fflush(fpOut);
@@ -1115,7 +1132,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 
 		while(!seqOver(tstring[0]))
 		{
-			if(tstring[0]!='\n')
+			if(tstring[0]!='\n' && tstring[0]!='\r')
 			{
 				tstring[0] = rsd2upper(tstring[0]);
 
@@ -1129,7 +1146,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 
 				tstring[0] = (char)(fgetc(fp));
 
-				if(tstring[0]!='\n' && !isValidDNACharacter(tstring[0]))
+				if(tstring[0]!='\n' && !isValidDNACharacter(tstring[0]) && tstring[0]!='\r')
 				{
 					fprintf(fpOut, "\n\nERROR: Invalid character (%c) found in sequence %s (outgroup)\n\n", tstring[0], RSDDataset->outgroupName2);
 					fflush(fpOut);
@@ -1162,6 +1179,12 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 		strcpy(seqName, &tstring[1]);
 
 		tstring[0] = (char)fgetc(fp); // \n newline
+		
+		if(tstring[0]=='\r')
+		{
+			tstring[0] = (char)fgetc(fp); // \n newline
+		}
+					
 		assert(tstring[0]=='\n');
 		
 		outgroup=0;
@@ -1222,7 +1245,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 
 			tstring[0] = rsd2upper((char)fgetc(fp));
 
-			while(tstring[0]=='\n' || tstring[0]=='\t' || tstring[0]==' ')
+			while(tstring[0]=='\n' || tstring[0]=='\t' || tstring[0]==' ' || tstring[0]=='\r')
 				tstring[0] = rsd2upper((char)fgetc(fp));
 
 			if(!isValidDNACharacter(tstring[0]))
