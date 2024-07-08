@@ -17,7 +17,7 @@ About
 
 RAiSD (Raised Accuracy in Sweep Detection) is a stand-alone software implementation of the μ statistic for selective sweep detection. Unlike existing implementations, including our previously released tools (SweeD and OmegaPlus), RAiSD scans whole-genome SNP data based on a composite evaluation scheme that captures multiple sweep signatures at once. 
 
-RAiSD-AI (RAiSD using AI) supports all the features of the latest RAiSD version (v3.1, released 8/8/2022) and adds support for the practical use of Convolutional Neural Networks in population genetics studies. 
+RAiSD-AI (RAiSD using AI) includes all the features of the latest RAiSD version (v3.1, released 8/8/2022) and introduces support for the practical deployment of Convolutional Neural Networks (CNN) in population genetics research. In addition to using the μ statistic for selective sweep detection, RAiSD-AI can also a) extract training data from standard file formats like FASTA and VCF, b) use TensorFlow or Pytorch to train a network and generate a CNN model, c) test the CNN model and report various classification metrics, d) deploy the CNN model to scan standard file formats (and optionally report detection metrics). RAiSD-AI implements specific optimizations that are specific to selective sweep detection 
 
 The main article describing RAiSD and the μ statistic is published in Communications Biology:
 
