@@ -57,12 +57,12 @@ Download and Compile
 
 The following commands can be used to download and compile the source code. 
 
-    $ mkdir RAiSD-AI
-    $ cd RAiSD-AI
-    $ wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
-    $ unzip master.zip
-    $ cd RAiSD-AI-master
-    $ ./compile-RAiSD-AI.sh
+     mkdir RAiSD-AI
+     cd RAiSD-AI
+     wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
+     unzip master.zip
+     cd RAiSD-AI-master
+     ./compile-RAiSD-AI.sh
     
 The executable is placed in the path RAiSD/raisd-master/bin/release. A link to the executable is placed in the installation folder, i.e., raisd-master. 
 
