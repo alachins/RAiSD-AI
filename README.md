@@ -4,6 +4,8 @@ RAiSD-AI: software to train, test, and use Convolutional Neural Networks for sel
 
 Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavlidisp@gmail.com)
 
+Note: RAiSD-AI is based on the codebase of [RAiSD] (https://www.nature.com/articles/s42003-018-0085-8.pdf)
+
 First release: 9/6/2017 
 
 Last update: 8/8/2022       
