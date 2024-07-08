@@ -66,7 +66,7 @@ The following commands can be used to download and compile the source code.
     
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
-RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/). This is no longer the case for RAiSD-AI. 
+RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values using interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native implementation of grid-based scans for both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
 
