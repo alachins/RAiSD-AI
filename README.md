@@ -66,34 +66,8 @@ The following commands can be used to download and compile the source code.
     
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
-As of version 2.7 (or later), the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) needs to be installed to compile and run RAiSD. The following error message (or similar) will appear if GSL is not installed and found in the expected /usr/include/gsl directory. In this case, please contact your system administrator to install it (RECOMMENDED). 
-	
-	Error message:
-	Creating directories
-	Beginning release build
-	Compiling: sources/RAiSD.c -> build/release/RAiSD.o
-	In file included from sources/RAiSD.c:22:0:
-	sources/RAiSD.h:30:27: fatal error: gsl/gsl_errno.h: No such file or directory
- 	#include <gsl/gsl_errno.h>
-         	                  ^
-	compilation terminated.
-	make[1]: *** [build/release/RAiSD.o] Error 1
-	make: *** [release] Error 2
-
-As an alternative, you can install GSL locally (NOT RECOMMENDED) with the following command (in the raisd-master installation folder): 
-
-  	 $ ./install-RAiSD-GSL.sh
-	 
-This will download the latest GSL version from https://ftp.gnu.org/gnu/gsl/, unzip it, install it in the raisd-master/gsl directory, and compile RAiSD. If the executable is not eventually created (this process might take a few minutes), you might need to change the version numbers in the install-RAiSD-GSL.sh script. A folder named gsl-X.Y is already created in the raisd-master directory, where X and Y are the GSL version numbers. Replace the version numbers in the 5th line of the install-RAiSD-GSL.sh script with X and Y, and execute the installation script again. 
-
-Finally, and while still in the raisd-master directory, use the following command to allow RAiSD to access the locally installed GSL library:
-	
-	$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/gsl/lib
-
-This command should be used from within the installation directory (raisd-master) in every new terminal before running RAiSD. Otherwise, the following error message will appear when launching RAiSD:
-
-	./RAiSD: error while loading shared libraries: libgsl.so.25: cannot open shared object file: No such file or directory
-	
+RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/). This is no longer the case for RAiSD-AI. 
+Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
 
 Test Run
