@@ -70,7 +70,7 @@ RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.g
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
 
-Test Run
+Quick Test Run
 --------
 
 To verify that RAiSD-AI is installed correctly, a test run can be done with the following command. This command is going to execute RAiSD-AI to scan 10 simulated sets of SNPs (genomic region size = 100000 bp, weak bottleneck, selective sweep at the center of the region) using the μ statistic.
@@ -80,7 +80,7 @@ To verify that RAiSD-AI is installed correctly, a test run can be done with the 
 Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run are generated. 
 
 
-Extensive RAiSD-AI Test Run
+Extensive Test Run
 ---------
 
 
