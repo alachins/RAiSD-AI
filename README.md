@@ -896,6 +896,9 @@ Changelog
 	v2.7 (8/4/2020): -G parameter to specify the grid size
 	v2.8 (22/4/2020): -CO, -COT, -COD parameters for common-outlier analysis between RAiSD and SweeD, install script for gsl
 	v2.9 (6/8/2020): fixed bug in parsing one-character VCF sample names
+ 	v3.0 (31/7/2021): -Q for VCF to ms conversion
+  	v3.1 (8/8/2022): -VAREXP, -SFSEXP, -LDEXP for exponentiation of the mu-statistic factors
+   	v4.0 (1/7/2024): RAiSD-AI release (data generation, CNN training and testing, and CNN-based scans)
 
 Support
 -------
