@@ -103,6 +103,8 @@ All basic RAiSD-AI operation modes can be tested through the provided test scrip
     10 -> Full scan using FAST-NN (PyTorch)
     11 -> Full scan using SweepNetRecombination (PyTorch)
 
+After completing all tests, you can run the clean-up-dir.sh script to remove all files generated during the extensive testing process.
+
 #### Operations 0 and 1: Generate training/test data (Expected total run time = 35 seconds)
 
 The following commands will parse the ms files in folder datasets/tain/ and generate training (0) and test (1) data for a CNN in various data types and formats.
