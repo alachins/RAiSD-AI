@@ -616,7 +616,21 @@ RAiSD provides four different strategies to handle missing data, using the -M pa
     2: Creates a mask for valid alleles and treats N as a third state 
     3: Creates a mask for valid alleles and ignores allele pairs with N
 
-Evaluating Accuracy
+
+CNN Evaluation (Classification)
+-------------------
+
+In MDL-GEN mode, RAiSD-AI reports validation accuracy. In MDL-TST mode, RAiSD-AI calculates the following several standard evaluation metrics for CNN classification performance:
+
+	- precision per class
+ 	- recall per class
+  	- F1-score per class
+   	- testing accuracy
+    
+These metrics only evaluate classification performance of the CNN. The following three sections (Evaluating Accuracy, Measuring Success Rate, and Evaluating Sensitivity) refer to detection performance.
+
+
+Evaluating Accuracy (Detection)
 -------------------
 RAiSD provides a series of parameters that facilitate measuring performance when simulated datasets are analyzed. Given a simulated dataset, e.g., in ms format, that comprises several sets of SNPs, the -T parameter can be used in order to direct RAiSD to report accuracy, defined as the average distance between a known sweep location (provided via -T and the reported best-score locations). 
 
@@ -632,7 +646,7 @@ Note the additional output lines in the RAiSD_Info file, reporting accuracy. The
     mu-LD	18577.810
     MuStat	1253.685
 
-Measuring Success Rate
+Measuring Success Rate (Detection)
 -----------------------
 The -d parameter can be used along with -T to direct RAiSD to report the success rate, defined as the percentage of sets with reported best-score location withing a distance (provided via -d, in base pairs) from the known target of selection (provided via -T, in base pairs). The respective command line for a distance threshold of 1% of the total region length, i.e., 1,000 bp, is shown below.
 
@@ -646,7 +660,7 @@ Note the additional output lines in RAiSD_Info file, reporting success rate. The
     mu-LD	0.019
     MuStat	0.626
 
-Evaluating Sensitivity (True Positive Rate)
+Evaluating Sensitivity (True Positive Rate, Detection)
 -------------------------------------------
 
 The -k and -l parameters can be used to direct the tool to report sensitivity. This requires to conduct a run on neutral data first and sort all per-set best scores in order to define a threshold for a given False Positive Rate (FPR). RAiSD does this automatically when neutral data are processed, with the use of the -k parameter, providing an FPR. The following command line illustrates this for an FPR of 5%.
