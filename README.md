@@ -64,6 +64,11 @@ The following commands can be used to download and compile the source code.
     $ cd RAiSD-AI-master
     $ ./compile-RAiSD-AI.sh
     
+Command to directly copy to terminal:
+    
+     mkdir RAiSD-AI; cd RAiSD-AI; wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-master; ./compile-RAiSD-AI.sh
+    
+
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
 RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
@@ -83,8 +88,34 @@ Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run 
 Extensive Test Run
 ---------
 
-TODO
+All basic RAiSD-AI operation modes can be tested through the provided test script test-all.sh, which requires two input arguments: the tool name and an integer value. The tool name is either RAiSD-AI or RAiSD-AI-ZLIB. The integer value specifies the operation:
 
+	 0 -> Generates training data
+	 1 -> Generates test data
+	 2 -> Trains and tests the TensorFlow implementation of SweepNet
+	 3 -> Trains and tests the PyTorch implementation of SweepNet
+	 4 -> Trains and tests FAST-NN (PyTorch)
+	 5 -> Generates training data for SweepNetRecombination
+	 6 -> Generates test data for SweepNetRecombination
+	 7 -> Trains and tests SweepNetRecombination (PyTorch)
+	 8 -> Full scan using the TensorFlow implementation of SweepNet
+	 9 -> Full scan using the PyTorch implementation of SweepNet
+    10 -> Full scan using FAST-NN (PyTorch)
+    11 -> Full scan using SweepNetRecombination (PyTorch)
+
+#### Operations 0 and 1: Generate training/test data (Expected total run time = 35 seconds)
+
+The following commands will parse the ms files in folder datasets/tain/ and generate training (0) and test (1) data for a CNN in various data types and formats.
+
+	 $ ./test-all.sh RAiSD-AI 0
+  	 $ ./test-all.sh RAiSD-AI 1
+
+The different data types and formats are:
+
+	 - raw SNP data (PNG)
+ 	 - raw SNP data and relative SNP distances (PNG and binary format)
+  	 - raw SNP data scaled based on the mu-statistic (PNG)
+   	 - derived allele frequencies and relative SNP distances (binary format)
     
 In-tool Help
 ------------
