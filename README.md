@@ -562,8 +562,8 @@ For each set of SNPs (separated by a line that contains the separator symbol "//
 
 #### Additional output files per operation mode
 
-	IMG-GEN 	The directory RAiSD_Images containing all training/test data per class (in separate folders) is generated. 
- 			The RAiSD_Report file is not generated in this mode.
+	IMG-GEN 	The directory RAiSD_Images containing all training/test data per class (in separate folders) 
+ 			is generated. The RAiSD_Report file is not generated in this mode.
 
     	MDL-GEN		The directory RAiSD_Model containing the trained CNN model is generated.
      			The RAiSD_Report file is not generated in this mode.
@@ -571,8 +571,9 @@ For each set of SNPs (separated by a line that contains the separator symbol "//
      	MDL-TST		The RAiSD_Info file contains the CNN evaluation metrics. 
      			The RAiSD_Report file is not generated in this mode.
 
- 	SWP-SCN		The directory RAiSD_Grid is additionally generated, containing all the windows (PNG or binary format) extracted
-  			from all simulations. These are subsequently used for prediction with the CNN.
+ 	SWP-SCN		The directory RAiSD_Grid is additionally generated, containing all the windows (PNG or 
+  			binary format) extracted from all simulations. These are subsequently used for prediction 
+     			with the CNN.
 
 Required Input Parameters
 -------------------------
