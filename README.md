@@ -475,6 +475,12 @@ RAiSD version 1.8 (or later) can also parse compressed VCF files (including ANGS
 RAiSD version 2.1 (or later) can also parse and process unordered VCF files (compressed unordered files are not yet supported).
 RAiSD version 2.6 (or later) can also parse and process FASTA files.
 
+
+Basic Operation Modes - TODO
+----------------------
+
+
+
 Output Files - TODO
 ------------
 
