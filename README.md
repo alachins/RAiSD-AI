@@ -627,8 +627,7 @@ In MDL-GEN mode, RAiSD-AI reports validation accuracy. In MDL-TST mode, RAiSD-AI
   	- F1-score per class
    	- testing accuracy
     
-These metrics only evaluate classification performance of the CNN. The following three sections (Evaluating Accuracy, Measuring Success Rate, and Evaluating Sensitivity) refer to detection performance.
-
+These metrics only evaluate classification performance of the CNN. The following three sections (Evaluating Accuracy, Measuring Success Rate, and Evaluating Sensitivity) refer to detection performance and evaluate CNN detection performance when the SWP-SCN mode is used.
 
 Evaluating Accuracy (Detection)
 -------------------
