@@ -6,11 +6,9 @@ RAiSD-AI is an extension of the [RAiSD](https://www.nature.com/articles/s42003-0
 
 Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavlidisp@gmail.com)
 
-RAiSD first release: 9/6/2017 
+RAiSD first release: 9/6/2017 | RAiSD-AI first release: 8/7/2024 | Version: 4.0
 
-RAiSD-AI first release: 8/7/2024       
-
-Version: 4.0
+RAiSD-AI code contributions by Sjoerd van den Belt and Hanqing Zhao
 
 About 
 -----
