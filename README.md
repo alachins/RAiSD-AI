@@ -620,7 +620,7 @@ RAiSD provides four different strategies to handle missing data, using the -M pa
 CNN Evaluation (Classification)
 -------------------
 
-In MDL-GEN mode, RAiSD-AI reports validation accuracy. In MDL-TST mode, RAiSD-AI calculates the following several standard evaluation metrics for CNN classification performance:
+In MDL-GEN mode, RAiSD-AI reports validation accuracy. In MDL-TST mode, RAiSD-AI calculates the following standard evaluation metrics for CNN classification performance:
 
 	- precision per class
  	- recall per class
