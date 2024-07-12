@@ -478,7 +478,7 @@ RAiSD version 2.6 (or later) can also parse and process FASTA files.
 
 Basic Operation Modes 
 ----------------------
-RAiSD-AI supports five basic operation modes:
+RAiSD-AI supports five basic operation modes. These can be selected through the -op command-line flag. The default is RSD-DEF.
 
 	RSD-DEF: Standard RAiSD execution using only the mu-statistic (no CNN)
 	IMG-GEN: Generates images (.png) that can be used for training (MDL-GEN) and/or inference (MDL-TST).
@@ -562,10 +562,16 @@ For each set of SNPs (separated by a line that contains the separator symbol "//
 
 #### Additional output files per operation mode
 
-	IMG-GEN 	A directory RAiSD_Images containing all training/test data per class (in separate folders) is generated. 
+	IMG-GEN 	The directory RAiSD_Images containing all training/test data per class (in separate folders) is generated. 
  			The RAiSD_Report file is not generated in this mode.
 
-    	
+    	MDL-GEN		The directory RAiSD_Model containing the trained CNN model is generated.
+     			The RAiSD_Report file is not generated in this mode.
+
+     	MDL-TST		The RAiSD_Info file contains the CNN evaluation metrics. 
+     			The RAiSD_Report file is not generated in this mode.
+
+ 	SWP-SCN		
 
 Required Input Parameters
 -------------------------
