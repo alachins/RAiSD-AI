@@ -597,7 +597,7 @@ VCF format
 Optional Input Parameters
 ------------------------
 
-In addition to the required set of parameters, several optional ones can be used. The in-tool help message provides a short description for each one of them. 
+In addition to the required set of parameters, several optional ones can be used. The in-tool help message provides a short description for each one of them. The short description here refers only to a subset of all parameters in RAiSD-AI.
 
 The -f parameter allows to overwrite existing output files. The default operation mode is to prevent execution in order to avoid accidental overwritting of existing output files.
 
