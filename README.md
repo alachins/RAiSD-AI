@@ -142,7 +142,7 @@ The following commands will generate training (5) and test data (6) for the Swee
 
 	 $ ./test-all.sh RAiSD-AI 5
   	 $ ./test-all.sh RAiSD-AI 6
-    	 $ ./test-all.sh RAiSD-AI 7
+     $ ./test-all.sh RAiSD-AI 7
 
 SweepNetRecombination is a 2x2 class model that can simultaneously predict two sets of classes. For example, it can be used to distinguish between recombination hotspots or not, and then distinguish between neutral and a selective sweep. This enables the detection of selective sweeps in recombination hotspots. The reported validation accuracy is the product of the individual validation accuracies of the two sets of classes. Note that the provided training and test data do not contain recombination hotspots. 
 
