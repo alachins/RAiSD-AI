@@ -571,7 +571,8 @@ For each set of SNPs (separated by a line that contains the separator symbol "//
      	MDL-TST		The RAiSD_Info file contains the CNN evaluation metrics. 
      			The RAiSD_Report file is not generated in this mode.
 
- 	SWP-SCN		
+ 	SWP-SCN		The directory RAiSD_Grid is additionally generated, containing all the windows (PNG or binary format) extracted
+  			from all simulations. These are subsequently used for prediction with the CNN.
 
 Required Input Parameters
 -------------------------
