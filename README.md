@@ -39,6 +39,9 @@ URL: https://doi.org/10.1093/bioinformatics/btad265
 6. SweepNet: A Lightweight CNN Architecture for the Classification of Adaptive Genomic Regions ([PDF](https://dl.acm.org/doi/pdf/10.1145/3592979.3593411))       
 URL: https://dl.acm.org/doi/pdf/10.1145/3592979.3593411
 
+7. Scalable CNN-based classification of selective sweeps using derived allele frequencies ([PDF](https://academic.oup.com/bioinformatics/article-pdf/40/Supplement_2/ii29/59016924/btae385.pdf))       
+URL: https://doi.org/10.1093/bioinformatics/btae385
+
 
 Changes to the μ statistic (May 2019)
 -------------------------------------
