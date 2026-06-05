@@ -300,8 +300,8 @@ void RSDVersions(FILE * fp)
 	fprintf(fp, " %*d. RAiSD v%d.%d (Jan 30, 2026): Code clean-up, added test datasets and example scripts for FASTER-NN and FASTER-NN-G\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Mar 24, 2026): Further code clean-up, fixed exit codes for errors\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 8, 2026): Fixed sample size mismatch error messages for VCF and added cuda environment\n", strlen, releaseIndex++, majorIndex, minorIndex++);
-	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 11, 2026): -pcs (same functionality as -pci) to facilitate pipelines that include MLD-GEN and SWP-SCN\n", strlen, releaseIndex++, majorIndex, minorIndex++);
-
+	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 11, 2026): -pcs (same functionality as -pci) to facilitate pipelines that include MLD-GEN and SWP-SCN\n", strlen, releaseIndex++, majorIndex, minorIndex++);	
+	fprintf(fp, " %*d. RAiSD v%d.%d (Jun 5, 2026): gui test release\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 }
 
 RSDCommandLine_t * RSDCommandLine_new(void)

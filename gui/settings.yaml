@@ -1,0 +1,5 @@
+config_file: /home/nalachio/Desktop/rsd-ai-gui/FINAL2/RAiSD-AI-GUI-1.0.1/gui/config.yaml
+environment_manager: conda
+environment_name: raisd-ai
+executable: /home/nalachio/Desktop/rsd-ai-gui/FINAL2/RAiSD-AI-GUI-1.0.1/RAiSD-AI-ZLIB
+workspace: /home/nalachio/Desktop/rsd-ai-gui/FINAL2/RAiSD-AI-GUI-1.0.1/testWorkspace

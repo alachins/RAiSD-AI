@@ -1,0 +1,1473 @@
+run_id_parameter:
+  name: Run ID
+  description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
+  cli: "-n "
+  type: str
+  constraints:
+    - type: regex
+      pattern: "\\w+"
+      hint: Letters, numbers and underscores allowed.
+common_directory_overwrite_parameter:
+  name: Overwrite common output directory
+  description: You are about to overwrite all data in the common output directory of the operations. Are you sure?
+  cli: "-frm"
+  type: bool
+  default: false
+modes:
+  - name: Standard RAiSD
+    operations:
+      RSD-DEF:
+        name: Sweep scan with the μ statistic
+        description: Perform a standard RAiSD sweep scan using the μ statistic.
+        cli: ""
+        input:
+          - name: Input data
+            description: The genomic data to be scanned for selective sweeps using the μ statistic. RAiSD expects a single file in ms, mbs, VCF or FASTA format.
+            cli: "-I "
+            file:
+              type: single
+              formats:
+                - .ms
+                - .mbs
+                - .vcf
+                - .fasta
+        output:
+          path:
+            - RAiSD_Report.
+            - type: run id
+          file:
+            type: single
+            formats: 
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite RAiSD report
+            description: You might overwrite an existing RAiSD report. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+  - name: RAiSD-AI
+    operations:
+      IMG-GEN:
+        name: Data preparation
+        description: Convert raw data into a suitable input format for CNN training and testing.
+        cli: "-op IMG-GEN"
+        input:
+          - name: Input data
+            description: The genomic data to be prepared for CNN training and testing. RAiSD-AI expects a single file in ms, mbs, VCF or FASTA format.
+            cli: "-I "
+            file:
+              type: single
+              formats:
+                - .ms
+                - .mbs
+                - .vcf
+                - .fasta
+        output:
+          path:
+            - RAiSD_Images.
+            - type: run id
+            - type: slash
+            - type: parameter
+              id: -icl
+          file:
+            type: directory
+            contents:
+              - type: single
+                formats:
+                  - .png
+        overwrite:
+          path:
+          - RAiSD_Info.
+          - type: run id
+          - .
+          - type: parameter
+            id: -icl
+          parameter:
+            name: Overwrite prepared data
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+        parameters:
+          "-icl":
+            name: Image class label
+            description: The output folder will use this name.
+            cli: "-icl "
+            type: str
+            default: class_label
+            constraints:
+              - type: regex
+                pattern: ".+"
+                hint: "Cannot be empty."
+          "-its":
+            name: Image target site
+            description: The target site position for generating images, corresponding to the center of the first generated image. Must be smaller than region length.
+            cli: "-its "
+            type: int
+            default: 1
+            constraints:
+              - type: interval
+                min: 1
+              # max: < region_length
+      MDL-GEN:
+        name: Model training
+        description: Train a sweep detection CNN model.
+        cli: "-op MDL-GEN"
+        input:
+          - name: Training data
+            description: The data used to train the CNN model. RAiSD-AI expects a directory with two subdirectories of data formatted with Data preparation. This is typically a RAiSD_Images directory.
+            cli: "-I "
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+        output:
+          path:
+            - RAiSD_Model.
+            - type: run id
+          file:
+            type: directory
+            contents:
+              - type: single
+                formats:
+                  - .pt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite model
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+      MDL-TST:
+        name: Model testing
+        description: Evaluate a sweep detection CNN model on a test dataset.
+        cli: "-op MDL-TST"
+        input:
+          - name: Model
+            description: The sweep detection CNN model to test. RAiSD-AI expects a directory created by Model training. This is typically a RAiSD_Model directory.
+            cli: "-mdl "
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Testing data
+            description: The data used to test the CNN model. RAiSD-AI expects a directory with two subdirectories of data formatted with Data preparation. This is typically a RAiSD_Images directory, and should be different from the data the model was trained on.
+            cli: "-I "
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+        output:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite results
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+      SWP-SCN:
+        name: Model sweep scan
+        description: Use a CNN model to scan for selective sweeps.
+        cli: "-op SWP-SCN"
+        input:
+          - name: Model
+            description: The sweep detection CNN model to use for scanning. RAiSD-AI expects a directory created by Model training. This is typically a RAiSD_Model directory.
+            cli: "-mdl "
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Data to scan
+            description: The genomic data to be scanned for selective sweeps using the CNN model. RAiSD expects a single file in ms, mbs, VCF or FASTA format.
+            cli: "-I "
+            file:
+              type: single
+              formats:
+                - .ms
+                - .mbs
+                - .vcf
+                - .fasta
+        output:
+          path:
+            - RAiSD_Report.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite report
+            description: You might overwrite an existing RAiSD report. Are you sure?
+            cli: "-f -frm"
+            type: bool
+            default: false
+  - name: Common outlier analysis
+    operations:
+      CO:
+        name: Common outlier analysis
+        description: Perform common outlier analysis for a completed RAiSD run.
+        cli: ""
+        input: []
+        output:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .co-report
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing results?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+  - name: File conversion
+    operations:
+      FASTA-VCF:
+        name: FASTA to VCF
+        description: Convert a FASTA file to VCF.
+        cli: "-E"
+        input:
+          - name: Input file
+            description: The file to be converted to VCF. RAiSD-AI expects a file in the FASTA format.
+            cli: "-I "
+            file:
+              type: single
+              formats:
+                - .fasta
+        output:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .vcf
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing data?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+      VCF-MS:
+        name: VCF to ms
+        description: Convert a VCF file to ms.
+        cli: ""
+        input:
+          - name: Input file
+            description: The file to be converted to ms. RAiSD-AI expects a file in the VCF format.
+            cli: "-I "
+            file:
+              type: single
+              formats:
+                - .vcf
+        output:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .ms
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing data?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
+parameter_groups:
+  - name: SNP and sample handling
+    operations:
+      - RSD-DEF
+      - SWP-SCN
+    parameters:
+      input-file-type:
+        name: Input file format
+        description: Choose the format of the input file to be scanned. Choosing the correct file format is important, because it may change the available parameters.
+        cli: null
+        type: enum
+        options:
+          - name: ms
+          - name: mbs
+            cli: "-b"
+          - name: FASTA
+          - name: VCF
+        default: 0
+      vcf-chromosome-count:
+        name: Number of chromosomes
+        description: Choose whether your VCF file contains one chromosome or multiple.
+        cli: null
+        type: enum
+        options:
+          - name: A single chromosome
+          - name: Multiple chromosomes
+        default: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+      vcf-compressed:
+        name: Compressed VCF
+        description: Choose whether your VCF file is compressed.
+        cli: null
+        type: enum
+        options:
+          - name: Uncompressed
+          - name: Compressed
+        default: 0
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+      "-L":
+        name: Region length
+        description: The region size (in basepairs) for your ms file.
+        cli: "-L "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 0
+      "-S":
+        name: Provide sample file
+        description: Provide a file containing the list of samples to be processed for your VCF file.
+        type: optional
+        parameter:
+          name: Sample file
+          description: The file containing the list of samples to be processed.
+          cli: "-S "
+          type: file
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+      "-m":
+        name: Minor allele frequency
+        description: The threshold value for excluding SNPs with minor allele frequency.
+        cli: "-m "
+        default: 0.0
+        type: float
+        constraints:
+          - type: interval
+            min: 0.0
+            max: 1.0
+      "-y":
+        name: Ploidy
+        description: The ploidy, which is used to correctly represent missing data.
+        cli: "-y "
+        type: int
+        default: 2
+        constraints:
+          - type: interval
+            min: 1
+      "-M":
+        name: Missing data handling strategy
+        description: Choose the method to handle missing data.
+        cli: "-M "
+        type: enum
+        options:
+          - name: Discard SNPs
+            cli: "0"
+          - name: Impute N per SNP
+            cli: "1"
+          - name: Represent N through a mask
+            cli: "2"
+          - name: Ignore allele pairs with N
+            cli: "3"
+        default: 0
+      "-X":
+        name: Exclude regions
+        description: Exclude specific regions in the input file from the analysis.
+        type: optional
+        default: false
+        parameter:
+          name: Excluded regions file
+          description: "A tab-delimited file that contains regions per chromosome (one per line) to be excluded from the analysis (Format: chromosome [tab] regionStart [tab] regionStop)."
+          cli: "-X "
+          type: file
+      "-B":
+        name: Provide chromosome size
+        description: For a VCF file with a single chromosome, you can provide the chromosome size. If not provided, the values will be determined at runtime by parsing each chromosome in its entirety before processing, leading to slightly longer overall execution time.
+        type: optional
+        default: false
+        parameter:
+          name: Chromosome size
+          description: The two values that describe the chromosome size.
+          cli: "-B "
+          type: multi
+          parameters:
+            - type: int
+              name: Region length in basepairs
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+            - type: int
+              name: Number of SNPs
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                # number of SNPs <= region length in basepairs
+          # selection target <= region length
+          # selection target D threshold <= region length
+        conditions:
+          - type: enabled
+            parameter: vcf-chromosome-count
+          - type: enum
+            parameter: vcf-chromosome-count
+            values:
+              - 0
+      "-o":
+        name: Order VCF
+        description: Enable dataset check and reordering of the unzipped VCF file.
+        cli: "-o"
+        type: bool
+        default: false
+        conditions:
+          - type: enabled
+            parameter: vcf-compressed
+          - type: enum
+            parameter: vcf-compressed
+            values:
+              - 0
+  - name: Sliding window and mu statistic
+    operations:
+      - RSD-DEF
+      - SWP-SCN
+    parameters:
+      "-w":
+        operations:
+          remove:
+            - SWP-SCN
+        name: Sweep scan window size
+        description: The window size. The default value is empirically determined.
+        cli: "-w "
+        type: int
+        default: 50
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
+      "-w-ai":
+        operations:
+          add:
+            - IMG-GEN
+          remove:
+            - RSD-DEF
+        name: Window size
+        description: The window width used to generate SNP windows as CNN input data. If using a previously trained model, the value must match the one used in training.
+        cli: "-w "
+        type: int
+        default: 400
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
+      "-c":
+        name: SFS slack
+        description: The slack for the SFS edges to be used for the calculation of mu_SFS.
+        cli: "-c "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+      "-G-rsd-def":
+        operations:
+          remove:
+            - SWP-SCN
+        name: Report grid scores
+        description: Report μ statistic scores at equidistant locations between the first and last SNPs.
+        type: optional
+        default: false
+        parameter:
+          name: Grid size
+          description: The total number of evaluation points across the data.
+          cli: "-G "
+          type: int
+          default: 10
+          constraints:
+            - type: interval
+              min: 3
+      "-G-swp-scn":
+        operations:
+          remove:
+            - RSD-DEF
+        name: Grid size
+        description: The total number of evaluation points across the data. The μ statistic scores will be reported at this many equidistant locations between the first and last SNPs.
+        cli: "-G "
+        type: int
+        default: 10
+        constraints:
+          - type: interval
+            min: 3
+      "-VAREXP":
+        name: mu-var exponent
+        description: The exponent for the mu-var factor.
+        cli: "-VAREXP "
+        type: float
+        default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
+      "-SFSEXP":
+        name: mu-sfs exponent
+        description: The exponent for the mu-sfs factor.
+        cli: "-SFSEXP "
+        type: float
+        default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
+      "-LDEXP":
+        name: mu-ld exponent
+        description: The exponent for the mu-ld factor.
+        cli: "-LDEXP "
+        type: float
+        default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
+  - name: Standard output and reports
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+    parameters:
+      "-s":
+        name: Split output
+        description: Generate a separate report file per set.
+        cli: "-s"
+        type: bool
+        default: false
+      "-t":
+        name: Remove set separator
+        description: Remove the set separator from the report(s).
+        cli: "-t"
+        type: bool
+        default: false
+      "-p":
+        name: Print sample list
+        description: Generate the output file RAiSD_Samples.runID, comprising a list of samples in the input file. Only supported with VCF.
+        cli: "-p"
+        operations:
+          remove:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        type: bool
+        default: false
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
+      "-O":
+        name: Display progress
+        description: Show progress on the display device (at SNP set granularity).
+        cli: "-O"
+        type: bool
+        default: true
+      "-R":
+        name: Full report
+        description: Include additional information in the report file(s), i.e. window start and end, and the mu-statistic factors for variation, SFS and LD.
+        cli: "-R"
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
+        type: bool
+        default: false
+      "-P":
+        name: Create plots
+        description: Generate four plots (for the three mu-statistic factors and the final score) in one PDF file per set of SNPs in the input file using Rscript. # Activates -s, -t, -R
+        cli: "-P"
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
+        type: bool
+        default: false
+      "-D":
+        name: Generate a site report
+        description: Generate a site report, e.g. total, discarded, imputed etc.
+        cli: "-D"
+        type: bool
+        default: false
+      "-A":
+        name: Create Manhattan plot
+        description: Generate a Manhattan plot for the final mu-statistic score using Rscript.
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
+        type: optional
+        default: false
+        parameter:
+          name: Probability value
+          description: Provide a probability value to be used for the quantile function in R.
+          cli: "-A "
+          type: float
+          default: 0.9999
+          constraints:
+            - type: interval
+              min: 0.0
+              min_inclusive: false # ?
+              max: 1.0
+              max_inclusive: false # ?
+  - name: Accuracy and sensitivity evaluation
+    operations:
+      - RSD-DEF
+      - SWP-SCN
+    parameters:
+      "-Td":
+        name: Calculate average distance
+        description: Calculate the average distance (over all datasets in the input file) between the selection target and the reported locations.
+        type: optional
+        default: false
+        parameter:
+          name: Average distance parameters
+          description: null
+          type: multi
+          parameters:
+            - name: Selection target
+              description: The selection target (in basepairs).
+              cli: "-T "
+              type: int
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                # <= region length
+            - name: Set maximum distance
+              description: Set the maximum distance from the selection target to calculate success rates, i.e., reported locations in the proximity of the target of selection (provided above).
+              type: optional
+              default: false
+              parameter:
+                name: Maximum distance
+                description: The maximum distance from the selection target (in basepairs).
+                cli: "-d "
+                type: int
+                default: 1
+                constraints:
+                  - type: interval
+                    min: 1
+                  # <= region length
+      "-k": # May be wrong!
+        name: Report score
+        description: Report the corresponding reported score after sorting reported locations for all the datasets in the input file.
+        type: optional
+        default: false
+        parameter:
+          name: False positive rate
+          description: The false positive rate to use.
+          cli: "-k "
+          type: float
+          default: 0.05
+          constraints:
+            - type: interval
+              min: 0.0
+              max: 1.0
+      "-l":
+        name: Thresholds
+        description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
+        cli: "-l "
+        type: count multi
+        parameters:
+          - name: Provide var threshold
+            description: Provide a threshold for the var statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: var threshold
+              description: The threshold for the var statistic.
+              cli: "var="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+          - name: Provide sfs threshold
+            description: Provide a threshold for the sfs statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: sfs threshold
+              description: The threshold for the sfs statistic.
+              cli: "sfs="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+          - name: Provide ld threshold
+            description: Provide a threshold for the ld statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: ld threshold
+              description: The threshold for the ld statistic.
+              cli: "ld="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+          - name: Provide mu threshold
+            description: Provide a threshold for the mu statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: mu threshold
+              description: The threshold for the mu statistic.
+              cli: "mu="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+          - name: Provide pcl0 threshold
+            description: Provide a threshold for the pcl0 statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: pcl0 threshold
+              description: The threshold for the pcl0 statistic.
+              cli: "pcl0="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+          - name: Provide pcl1 threshold
+            description: Provide a threshold for the pcl1 statistic to report the true positive rate.
+            type: optional
+            default: false
+            parameter:
+              name: pcl1 threshold
+              description: The threshold for the pcl1 statistic.
+              cli: "pcl1="
+              type: float
+              default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+  - name: FASTA to VCF conversion
+    operations:
+      - FASTA-VCF
+    parameters:
+      "-C":
+        name: Provide outgroup name
+        description: Provide the outgroup to be used for the ancestral states. The first ingroup sequence is used if the outgroup is not given or found.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: "-C "
+          type: str
+          default: ""
+          constraints:
+            - type: regex
+              pattern: ".+"
+              hint: Cannot be empty.
+      "-C2":
+        name: Provide second outgroup name
+        description: Provide the second outgroup to be used for the ancestral states.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: "-C2 "
+          type: str
+          default: ""
+          constraints:
+            - type: regex
+              pattern: ".+"
+              hint: Cannot be empty.
+          conditions:
+            - type: optional
+              parameter: "-C"
+      "-H":
+        name: Chromosome name
+        description: Provide the chromosome name.
+        cli: "-H "
+        type: str
+        default: "chrom"
+        constraints:
+          - type: regex
+            pattern: ".+"
+            hint: Cannot be empty.
+  - name: VCF to ms conversion
+    operations:
+      - VCF-MS
+    parameters:
+      "-L-vcf-ms":
+        name: Ms region length
+        description: The region size (in basepairs) for the ms file obtained from the conversion. # ?
+        cli: "-L "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+      "-Q":
+        name: Memory size
+        description: The memory size (in MB) to be allocated for the conversion.
+        cli: "-Q "
+        type: int
+        default: 8
+        constraints:
+          - type: interval
+            min: 1
+  - name: Common outlier analysis # TODO: review this section! the user should not be able to edit the column indices except for the last one
+    operations:
+      - CO
+      - RSD-DEF
+      - SWP-SCN
+    parameters:
+      "-CO":
+        operations:
+          remove:
+            - CO
+        name: Perform common outlier analysis
+        description: Perform common outlier analysis along with a standard or AI sweep scan.
+        cli: "-CO "
+        type: optional
+        default: false
+        parameter:
+          name: Common outlier analysis options
+          description: The options for performing common outlier analysis.
+          type: multi
+          parameters:
+            - name: SweeD/OmegaPlus report
+              description: Upload the report file produced by SweeD or OmegaPlus. The report must not contain a header.
+              type: file
+            - name: First column
+              description: The index of the first column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+              type: int
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                  max: 1
+            - name: Second column
+              description: The index of the second column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+              type: int
+              default: 2
+              constraints:
+                - type: interval
+                  min: 2
+                  max: 2
+      "-CO-already-run":
+        operations:
+          remove:
+            - RSD-DEF
+            - SWP-SCN
+        name: Common outlier analysis options
+        description: The options for performing common outlier analysis on the results of a previously performed sweep scan.
+        cli: "-CO "
+        type: multi
+        parameters:
+          - name: SweeD/OmegaPlus report
+            description: Upload the report file produced by SweeD or OmegaPlus. The report must not contain a header.
+            type: file
+          - name: First SweeD/OmegaPlus column
+            description: The index of the first column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+            type: int
+            default: 1
+            constraints:
+              - type: interval
+                min: 1
+                max: 1
+          - name: Second SweeD/OmegaPlus column
+            description: The index of the second column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+            type: int
+            default: 2
+            constraints:
+              - type: interval
+                min: 2
+                max: 2
+          - name: RAiSD report
+            description: The RAiSD report to be used for common outlier analysis. The report must not contain a header.
+            type: file
+          - name: First RAiSD column
+            description: The index of the first column of the RAiSD report to be used for common outlier analysis.
+            type: int
+            default: 1
+            constraints:
+              - type: interval
+                min: 1
+                max: 1
+          - name: Second RAiSD column
+            description: The index of the column you want to use for common outlier analysis, depending on the RAiSD report. To use the mu-statistic, set it to 2 if RAiSD was invoked with the default parameters, or set it to 7 if "Full report" was explicitly provided or implicitly activated through some other parameter.
+            type: int
+            default: 2
+            constraints:
+              - type: interval
+                min: 2
+                max: 7
+      "-COT":
+        name: Cut-off threshold
+        description: The cut-off threshold for identifying top outliers per report.
+        cli: "-COT "
+        type: float
+        default: 0.05
+        constraints:
+          - type: interval
+            min: 0.0
+            max: 1.0
+        conditions:
+          - type: or
+            conditions:
+              - type: optional
+                parameter: "-CO"
+                value: true
+              - type: enabled
+                parameter: "-CO-already-run"
+                value: true
+      "-COD":
+        name: Maximum distance
+        description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
+        cli: "-COD "
+        type: int
+        default: 100
+        constraints:
+          - type: interval
+            min: 0
+          # soft constraint: typically 100-400
+        conditions:
+          - type: or
+            conditions:
+              - type: optional
+                parameter: "-CO"
+                value: true
+              - type: enabled
+                parameter: "-CO-already-run"
+                value: true
+  - name: RAiSD-AI data preparation
+    operations:
+      - IMG-GEN
+    parameters:
+      input-file-type-img-gen:
+        name: Data preparation - Input file format
+        description: Choose the format of the input file(s) for data preparation. Choosing the correct file format is important, because it may change the available parameters.
+        cli: null
+        type: enum
+        options:
+          - name: ms
+          - name: mbs
+            cli: "-b"
+          - name: FASTA
+          - name: VCF
+        default: 0
+      vcf-chromosome-count-img-gen:
+        name: Data preparation - Number of chromosomes
+        description: Choose whether your VCF file(s) contain one chromosome each, or multiple.
+        cli: null
+        type: enum
+        options:
+          - name: A single chromosome
+          - name: Multiple chromosomes
+        default: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type-img-gen
+            values:
+              - 3
+      vcf-compressed-img-gen:
+        name: Data preparation - Compressed VCF
+        description: Choose whether your VCF file(s) are compressed.
+        cli: null
+        type: enum
+        options:
+          - name: Uncompressed
+          - name: Compressed
+        default: 0
+        conditions:
+          - type: enum
+            parameter: input-file-type-img-gen
+            values:
+              - 3
+      "-L-img-gen":
+        name: Data preparation - Region length
+        description: The region size (in basepairs) for your ms file(s).
+        cli: "-L "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type-img-gen
+            values:
+              - 0
+      "-S-img-gen":
+        name: Data preparation - Provide sample file
+        description: Provide a file containing the list of samples to be processed for your VCF file(s).
+        type: optional
+        parameter:
+          name: Data preparation - Sample file
+          description: The file containing the list of samples to be processed.
+          cli: "-S "
+          type: file
+        conditions:
+          - type: enum
+            parameter: input-file-type-img-gen
+            values:
+              - 3
+      "-m-img-gen":
+        name: Data preparation - Minor allele frequency
+        description: The threshold value for excluding SNPs with minor allele frequency.
+        cli: "-m "
+        default: 0.0
+        type: float
+        constraints:
+          - type: interval
+            min: 0.0
+            max: 1.0
+      "-y-img-gen":
+        name: Data preparation - Ploidy
+        description: The ploidy, which is used to correctly represent missing data.
+        cli: "-y "
+        type: int
+        default: 2
+        constraints:
+          - type: interval
+            min: 1
+      "-M-img-gen":
+        name: Data preparation - Missing data handling strategy
+        description: Choose the method to handle missing data.
+        cli: "-M "
+        type: enum
+        options:
+          - name: Discard SNPs
+            cli: "0"
+          - name: Impute N per SNP
+            cli: "1"
+          - name: Represent N through a mask
+            cli: "2"
+          - name: Ignore allele pairs with N
+            cli: "3"
+        default: 0
+      "-X-img-gen":
+        name: Data preparation - Exclude regions
+        description: Exclude specific regions in the input file(s) from the analysis.
+        type: optional
+        default: false
+        parameter:
+          name: Data preparation - Excluded regions file
+          description: "A tab-delimited file that contains regions per chromosome (one per line) to be excluded from the analysis (Format: chromosome [tab] regionStart [tab] regionStop)."
+          cli: "-X "
+          type: file
+      "-B-img-gen":
+        name: Data preparation - Provide chromosome size
+        description: For VCF file(s) with a single chromosome, you can provide the chromosome size. If not provided, the values will be determined at runtime by parsing each chromosome in its entirety before processing, leading to slightly longer overall execution time.
+        type: optional
+        default: false
+        parameter:
+          name: Data preparation - Chromosome size
+          description: The two values that describe the chromosome size.
+          cli: "-B "
+          type: multi
+          parameters:
+            - type: int
+              name: Data preparation - Region length in basepairs
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+            - type: int
+              name: Data preparation - Number of SNPs
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                # number of SNPs <= region length in basepairs
+          # selection target <= region length
+          # selection target D threshold <= region length
+        conditions:
+          - type: enabled
+            parameter: vcf-chromosome-count-img-gen
+          - type: enum
+            parameter: vcf-chromosome-count-img-gen
+            values:
+              - 0
+      "-o-img-gen":
+        name: Data preparation - Order VCF
+        description: Enable dataset check and reordering of unzipped VCF file(s).
+        cli: "-o"
+        type: bool
+        default: false
+        conditions:
+          - type: enabled
+            parameter: vcf-compressed-img-gen
+          - type: enum
+            parameter: vcf-compressed-img-gen
+            values:
+              - 0
+      "-poc": 
+        name: Construct position-centered windows
+        description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
+        cli: "-poc"
+        type: bool
+        default: false
+      "-ips":
+        name: Images per simulation
+        description: Provides the number of images to be created per simulation.
+        cli: "-ips "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+      "-iws":
+        name: Image window step
+        description: The window step for creating images.
+        cli: "-iws "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
+      "-bin":
+        name: Convert image data to .snp
+        description: Convert image data to a custom binary format (.snp). Only supported by the PyTorch implementation.
+        cli: "-bin"
+        type: bool
+        default: false
+      "-typ":
+        name: Data type
+        description: 
+        cli: "-typ "
+        type: enum
+        options:
+          - name: Raw data in all channels
+            cli: "0"
+          - name: Raw data in one channel and pairwise snp distances in the other channels
+            cli: "1"
+          - name: Raw data in one channel and mu-var-scaled values in the other channels
+            cli: "2"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: false
+      "-typ-bin":
+        name: Data type
+        description: 
+        cli: "-typ "
+        type: enum
+        options:
+          - name: Raw snp data and positions
+            cli: "0"
+          - name: Derived allele frequencies and positions
+            cli: "1"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: true
+  - name: RAiSD-AI model training
+    operations:
+      - MDL-GEN
+    parameters: 
+      "-arc": 
+        name: Network architecture
+        description: The neural network architecture of the sweep detection model.
+        cli: "-arc "
+        type: enum
+        default: 2
+        options:
+          - name: SweepNet
+            cli: SweepNet
+          - name: FAST-NN
+            cli: FAST-NN
+          - name: FASTER-NN
+            cli: FASTER-NN
+          - name: FASTER-NN-G
+            cli: FASTER-NN-G
+      "-e":
+        name: Epochs
+        description: The number of epochs to train the CNN model for.
+        cli: "-e "
+        type: int
+        default: 10
+        constraints:
+          - type: interval
+            min: 1
+      "-cl4": 
+        name: Pairings between class labels
+        description: The 4 pairings between class labels and corresponding folder names.
+        cli: "-cl4 "
+        type: multi
+        parameters:
+          - name: First folder name
+            type: str
+            cli: "label00="
+          - name: Second folder name
+            type: str
+            cli: "label01="
+          - name: Third folder name
+            type: str
+            cli: "label10="
+          - name: Fourth folder name
+            type: str
+            cli: "label11="
+        conditions:
+          - type: enum
+            parameter: "-arc"
+            values:
+              - 3
+      "-cl4_1x_label":
+        name: Provide identifier for Group 1x
+        description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in the Data generation operation will be used instead.
+        cli: "-cl4_1x_label "
+        type: optional
+        parameter:
+          name: Identifier for Group 1x
+          type: str
+          constraints:
+            - type: regex
+              pattern: "\\w+"
+              hint: Letters, numbers and underscores allowed.
+        conditions:
+          - type: enabled
+            parameter: "-cl4"
+      "-cl4_x1_label":
+        name: Provide identifier for Group x1
+        description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in the Data generation operation will be used instead.
+        cli: "-cl4_x1_label "
+        type: optional
+        parameter:
+          name: Identifier for Group x1
+          type: str
+          constraints:
+            - type: regex
+              pattern: "\\w+"
+              hint: Letters, numbers and underscores allowed.
+        conditions:
+          - type: enabled
+            parameter: "-cl4"
+      "-g":
+        name: Provide number of sequence groups
+        description: Provide the number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size will be used.
+        cli: "-g "
+        type: optional
+        parameter:
+          name: Number of sequence groups
+          description: The number of sequence groups to be created.
+          type: int
+          default: 1
+          constraints:
+            - type: interval
+              min: 1
+        conditions:
+          - type: enum
+            parameter: "-arc"
+            values:
+              - 3
+  - name: RAiSD-AI model testing
+    operations:
+      - MDL-TST
+    parameters:
+      "-clp":
+        name: Class tests
+        description: Enter two or four label-folder pairs. Choose four only if the model was generated with FASTER-NN-G and four class labels.
+        cli: "-clp "
+        type: string table
+        separator: "="
+        columns:
+          - name: Labels
+            default: ""
+            constraints:
+              - type: regex
+                pattern: ".+"
+                hint: Non-empty.
+          - name: Folders
+            default: ""
+            constraints:
+              - type: regex
+                pattern: ".+"
+                hint: Non-empty.
+        rows:
+          - 2
+          - 4
+  - name: RAiSD-AI sweep scan
+    operations:
+      - SWP-SCN
+    parameters:
+      "-pcs-class-count":
+        name: Number of positive classes
+        description: The number of positive classes. Choose 2 only if the model was generated with FASTER-NN-G and four class labels.
+        type: enum
+        options:
+          - name: "1"
+          - name: "2"
+      "-pcs-1":
+        name: Positive class label
+        description: Enter the label of the positive class. The label must match one used in Model training.
+        type: str
+        cli: "-pcs 1 "
+        constraints:
+          - type: regex
+            pattern: "\\w+"
+            hint: Letters, numbers and underscores allowed.
+        conditions:
+          - type: enum
+            parameter: "-pcs-class-count"
+            values:
+              - 0
+      "-pcs-2":
+        name: Positive class labels
+        description: Enter the labels of the two positive classes. The labels must match ones used in the Model training that trained the FASTER-NN-G model.
+        type: multi
+        cli: "-pcs 2 "
+        parameters:
+          - name: First positive class label
+            type: str
+            constraints:
+              - type: regex
+                pattern: "\\w+"
+                hint: Letters, numbers and underscores allowed.
+          - name: Second positive class label
+            type: str
+            constraints:
+              - type: regex
+                pattern: "\\w+"
+                hint: Letters, numbers and underscores allowed.
+        conditions:
+          - type: enum
+            parameter: "-pcs-class-count"
+            values:
+              - 1
+  - name: Additional parameters
+    operations: []
+    parameters:
+      "-gpu":
+        name: Use GPU
+        description: Change the target hardware platform to be used for training, inference for model testing, and sweep scans from CPU to GPU. CUDA must be enabled to use this option.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        cli: "-gpu"
+        type: bool
+        default: false
+      "-useTF":
+        name: Use TensorFlow
+        description: Change the machine learning library from TensorFlow to PyTorch. Only supported for SweepNet.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        cli: "-useTF"
+        type: bool
+        default: false
+        conditions:
+          - type: enum
+            parameter: "-arc"
+            values:
+              - 0
+  - name: Miscellaneous
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+      - CO
+      - FASTA-VCF
+      - VCF-MS
+    parameters:
+      "-a":
+        name: Provide RNG seed
+        description: Provide a seed to initialize the random number generator. If not provided, the current time of day is used for initialization.
+        type: optional
+        parameter:
+          name: Seed
+          cli: "-a "
+          type: int
+          default: 0

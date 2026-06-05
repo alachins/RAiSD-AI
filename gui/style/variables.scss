@@ -1,0 +1,32 @@
+$font-size: 16px;
+
+$primary-dark: #0a0d4f;
+$primary-purple: #9090c1;
+$accent-orange: #f3af56;
+$purplish-background: #d7dbe9;
+$border-gray: #9a9a9a;
+
+$valid: green;
+$valid-background: lightgreen;
+$warning: yellow;
+$warning-background: lightyellow;
+$invalid: red;
+$invalid-background: salmon;
+$info: #46a2da;
+$info-background: #ebf7ff;
+
+$button-disabled-background: #b2b7d1;
+$button-disabled-text-color: #7c7f9a;
+$button-disabled-border: 1px solid #b8bdd6;
+
+$button-purple: #b4b4de;
+$button-hover: #a3a3d6;
+$button-pressed: #9191ce;
+
+$sidebar-button-hover: #e6e6e6;
+$sidebar-button-pressed: #cccccc;
+
+$process-indicator-running-border: #e09530;
+$process-indicator-failed-border: #c03030;
+$process-indicator-failed-background: #e05555;
+$process-indicator-stopped-border: #7a7a7a;
