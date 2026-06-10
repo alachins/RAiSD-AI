@@ -114,7 +114,8 @@ void RSDPlot_createRscriptName (RSDCommandLine_t * RSDCommandLine, char * script
 {
 	assert(scriptName!=NULL);
 
-	strcpy(scriptName, "RSDPlot_");
+	strcpy(scriptName, _COMPILE_PATH); // FIX3
+	strcat(scriptName, "/RSDPlot_");
 	strcat(scriptName, RSDCommandLine->runName);
 	strcat(scriptName, ".R");
 }
@@ -315,12 +316,12 @@ dev.off() \n";
  plot(d1[,1], d1[,2], col=\"darkgray\", pch=16, ylab=\"\", xlab=\"\") \n \
  points(d3[,1], d3[,2], col=\"red\", pch=19, cex=1.0) \n \
  mtext(side=1, text=\"Position\", 2) \n \
- mtext(side=2, text=\"SweeD\", 2) \n \
- title(paste(\"SweeD-RAiSD common outliers for \", args[1], \" ( top \", args[2],\" )\", sep=\"\")) \n \
+ mtext(side=2, text=\"Method A\", 2) \n \
+ title(paste(\"Common outliers for \", args[1], \" ( top \", args[2],\" )\", sep=\"\")) \n \
  plot(d2[,1], d2[,2], col=\"darkgray\", pch=16, ylab=\"\", xlab=\"\") \n \
  points(d4[,1], d4[,2], col=\"red\", pch=19, cex=1.0) \n \
  mtext(side=1, text=\"Position\", 2) \n \
- mtext(side=2, text=\"RAiSD\", 2) \n \
+ mtext(side=2, text=\"Method B\", 2) \n \
  dev.off() \n";
 		break;
 		
@@ -485,8 +486,6 @@ void RSDPlot_removeRscript (RSDCommandLine_t * RSDCommandLine, int mode)
 void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDataset, RSDMuStat_t * RSDMuStat, RSDCommonOutliers_t * RSDCommonOutliers, int mode, void * nn)
 {
 	assert(RSDCommandLine!=NULL);
-	assert(RSDDataset!=NULL);
-	assert(RSDMuStat!=NULL);
 	assert(RSDCommonOutliers!=NULL);
 	
 	if(RSDCommandLine->createPlot!=1)
@@ -499,6 +498,9 @@ void RSDPlot_createPlot (RSDCommandLine_t * RSDCommandLine, RSDDataset_t * RSDDa
 
 	if(mode==RSDPLOT_BASIC_MU)
 	{
+		assert(RSDDataset!=NULL);
+		assert(RSDMuStat!=NULL);
+	
 		strcpy(tstring, "Rscript ");
 		strcat(tstring, scriptName);
 		strcat(tstring, " ");	

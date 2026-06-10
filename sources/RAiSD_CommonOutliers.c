@@ -223,6 +223,7 @@ void RSDCommonOutliers_writeToolReport (RSDCommonOutliers_t * RSDCommonOutliers,
 
 	}
 
+	fflush(fp);
 	fclose(fp);		
 }
 
@@ -243,17 +244,17 @@ int RSDCommonOutliers_findOutliers (RSDCommonOutliers_t * RSDCommonOutliers, RSD
 	double thres1 = RSDCommonOutliers->scoreSweeD[thres1Index];
 	double thres2 = RSDCommonOutliers->scoreRAiSD[thres2Index];
 
-	fprintf(stdout, " SweeD threshold\t%f\n", thres1);
-	fprintf(RAiSD_Info_FP, " SweeD threshold\t%f\n", thres1);
+	fprintf(stdout, " Method-A threshold\t%f\n", thres1);
+	fprintf(RAiSD_Info_FP, " Method-A threshold\t%f\n", thres1);
 
-	fprintf(stdout, " RAiSD threshold\t%f\n", thres2);
-	fprintf(RAiSD_Info_FP, " RAiSD threshold\t%f\n", thres2);
+	fprintf(stdout, " Method-B threshold\t%f\n", thres2);
+	fprintf(RAiSD_Info_FP, " Method-B threshold\t%f\n", thres2);
 
 	RSDCommonOutliers->coPointSizeSweeD = 0;
 	int i;
 	for(i=0;i<RSDCommonOutliers->reportSizeSweeD;i++)
 	{
-		if(RSDCommonOutliers->scoreSweeD[i]>thres1)
+		if(RSDCommonOutliers->scoreSweeD[i]>=thres1)
 		{
 			RSDCommonOutliers->coPointSizeSweeD++;
 
@@ -271,7 +272,7 @@ int RSDCommonOutliers_findOutliers (RSDCommonOutliers_t * RSDCommonOutliers, RSD
 	RSDCommonOutliers->coPointSizeRAiSD = 0;
 	for(i=0;i<RSDCommonOutliers->reportSizeRAiSD;i++)
 	{
-		if(RSDCommonOutliers->scoreRAiSD[i]>thres2)
+		if(RSDCommonOutliers->scoreRAiSD[i]>=thres2)
 		{
 			RSDCommonOutliers->coPointSizeRAiSD++;
 
