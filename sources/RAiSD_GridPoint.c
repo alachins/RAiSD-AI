@@ -560,7 +560,7 @@ RSDGridPoint_t * RSDGridPoint_compute (void * RSDImagev, RSDMuStat_t * RSDMuStat
 		
 		/* image-generation for CNN inference */
 				
-		if(RSDCommandLine->opCode == OP_USE_CNN || RSDCommandLine->opCode == OP_CREATE_IMAGES) 
+		if((RSDCommandLine->opCode == OP_USE_CNN || RSDCommandLine->opCode == OP_CREATE_IMAGES)&&(isValid==1)) 
 		{
 			assert(RSDImagev!=NULL);
 			
