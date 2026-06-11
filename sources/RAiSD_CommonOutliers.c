@@ -297,7 +297,7 @@ int RSDCommonOutliers_findOutliers (RSDCommonOutliers_t * RSDCommonOutliers, RSD
 
 	char filename1 [STRING_SIZE];
 
-	strcpy(filename1, "RAiSD_CommonOutlierPointsSweeD.");
+	strcpy(filename1, "RAiSD_CommonOutlierPointsMethodA.");
 	strcat(filename1, RSDCommandLine->runName);
 	strcpy(RSDCommonOutliers->common1Filename, filename1);
 
@@ -306,7 +306,7 @@ int RSDCommonOutliers_findOutliers (RSDCommonOutliers_t * RSDCommonOutliers, RSD
 
 	char filename2 [STRING_SIZE];
 
-	strcpy(filename2, "RAiSD_CommonOutlierPointsRAiSD.");
+	strcpy(filename2, "RAiSD_CommonOutlierPointsMethodB.");
 	strcat(filename2, RSDCommandLine->runName);
 	strcpy(RSDCommonOutliers->common2Filename, filename2);
 
