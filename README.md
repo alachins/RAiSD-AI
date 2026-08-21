@@ -15,7 +15,7 @@ Current version: 4.5 | Released: 11/4/2026
 RAiSD-AI code contributions by Sjoerd van den Belt and Hanqing Zhao
 
 About 
------
+-----Before running RAiSD-AI from the command line, always activate either the raisd-ai or raisd-ai-cuda environment. The raisd-ai-gui environment is intended exclusively for the GUI and should not be used for command-line runs
 
 RAiSD (Raised Accuracy in Sweep Detection) is a stand-alone software implementation of the μ statistic for selective sweep detection. Unlike existing implementations, including our previously released tools (SweeD and OmegaPlus), RAiSD scans whole-genome SNP data based on a composite evaluation scheme that captures multiple sweep signatures at once. 
 
@@ -129,7 +129,7 @@ To verify that RAiSD-AI is installed correctly, a simple test run can be done wi
 > Before running RAiSD-AI from the command line, always activate either the `raisd-ai` or `raisd-ai-cuda` environment. The `raisd-ai-gui` environment is intended exclusively for the GUI and should not be used for command-line runs.
 
 
-Extensive Test Run
+Extensive Test Runs
 ---------
 
 All basic RAiSD-AI operation modes can be tested through the provided test script test-all.sh, which requires two input arguments: the tool name and an integer value. The tool name is either RAiSD-AI or RAiSD-AI-ZLIB. The integer value specifies the operation:
@@ -151,10 +151,11 @@ After completing all tests, you can run the clean-up-dir.sh script to remove all
 
 #### Operations 0 and 1: Generate training/test data (Expected total run time = 35 seconds)
 
-The following commands will parse the ms files in folder datasets/tain/ and generate training (0) and test (1) data for a CNN in various data types and formats.
+The following commands will parse the ms files in folder datasets/train/ and generate training (0) and test (1) data for a CNN in various data types and formats.
 
-	 $ ./test-all.sh RAiSD-AI 0
-  	 $ ./test-all.sh RAiSD-AI 1
+   ```bash
+   ./test-all.sh RAiSD-AI 0; ./test-all.sh RAiSD-AI 1
+   ```
 
 The different data types and formats are:
 
