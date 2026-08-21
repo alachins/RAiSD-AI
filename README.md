@@ -53,8 +53,6 @@ URL: https://www.nature.com/articles/s42003-025-07480-7
 URL: https://ecoevorxiv.org/repository/view/12341/
 
 
-
-
 Download and Compile
 --------------------
 
@@ -90,7 +88,6 @@ Download and Compile
    conda env create -f environment-raisd-ai-cuda.yml
    ```
 
-
 5. Create the Conda environment for the RAiSD-AI GUI (Optional):
 
    ```bash
@@ -108,6 +105,7 @@ Download and Compile
 	RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
+
 Start the Graphical User Interface (GUI)
 --------
 
@@ -116,6 +114,7 @@ Activate the Conda environment for the RAiSD-AI GUI and start the application:
    ```bash
    conda activate raisd-ai-gui; python -m gui.app
    ```
+
 
 Simple Test Run
 --------
@@ -217,7 +216,8 @@ The following commands will perform full scans of 100 simulations for selective 
 The following commands will perform full scans of 100 simulations for selective sweeps using the SweepNetRecombination network architecture (PyTorch implementation only) for all previously generated data types and formats that are supported with this network.
 
 	 $ ./test-all.sh RAiSD-AI 11
-     
+
+	 
 In-tool Help
 ------------
 
