@@ -196,7 +196,7 @@ The different data types and formats are:
 
 Two classes are generated (neutral and selective sweep) from a simple mild-bottleneck dataset. A total of 200 windows are used for training, and 20 windows are used for testing.
 
-#### Operations 2 and 3: Train and test CNN architecture SweepNet (TensorFlow = 100 seconds, PyTorch = 80 seconds)
+#### Operations 2 and 3: Train and test SweepNet (TensorFlow = 100 seconds, PyTorch = 80 seconds)
 
 The following commands will use the TensorFlow (2) and PyTorch (3) implementations of SweepNet for training (10 epochs) and testing, generating models for all previously generated data types and formats that are supported with SweepNet.
 
@@ -207,13 +207,13 @@ The following commands will use the TensorFlow (2) and PyTorch (3) implementatio
 
 
 
-#### Operation 4: Train and test CNN architecture FAST-NN (70 seconds)
+#### Operation 4: Train and test FASTER-NN (70 seconds)
 
-The following command will train (10 epochs) and test the FAST-NN network architecture, generating models for all previously generated data types and formats that are supported with FAST-NN.
+The following command will train (10 epochs) and test the FASTER-NN network architecture, generating models for all previously generated data types and formats that are supported with FASTER-NN. FASTER-NN is only implemented in PyTorch.
 
-	 $ ./test-all.sh RAiSD-AI 4
-
-FAST-NN is only implemented in PyTorch.
+   ```bash
+   ./test-all.sh RAiSD-AI 4
+   ```
 
 
 #### Operations 5-7: Train and test CNN architecture SweepNetRecombination (5 minutes)
