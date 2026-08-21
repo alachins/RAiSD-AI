@@ -148,7 +148,7 @@ The script accepts two arguments:
 ### Available operations
 
 | Option | Operation |
-|:------:|-----------|
+|:------|:-----------|
 | `0` | Generate training data |
 | `1` | Generate test data |
 | `2` | Train and test SweepNet using TensorFlow |
@@ -176,7 +176,7 @@ The following commands will parse the ms files in folder datasets/train/ and gen
 The different data types and formats are:
 
 | Data representation | Format |
-|---------------------|--------|
+|:---------------------|:--------|
 | Raw SNP data | PNG |
 | Raw SNP data with relative SNP distances | PNG and binary |
 | Raw SNP data scaled using the μ-statistic | PNG |
