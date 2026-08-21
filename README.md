@@ -49,6 +49,10 @@ URL: https://doi.org/10.1093/bioinformatics/btae385
 8. Fast and accurate deep learning scans for signatures of natural selection in genomes using FASTER-NN ([PDF](https://www.nature.com/articles/s42003-025-07480-7.pdf))       
 URL: https://www.nature.com/articles/s42003-025-07480-7
 
+9. Deep learning scans for selective sweeps using RAiSD-AI ([PDF](file:///home/nalachio/Downloads/book_chapter___raisd_ai-v2-2.pdf))       
+URL: https://doi.org/10.32942/X2GW9B
+
+
 
 Changes to the μ statistic (May 2019)
 -------------------------------------
