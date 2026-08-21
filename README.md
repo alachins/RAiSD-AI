@@ -76,6 +76,23 @@ Download and Compile
    cd RAiSD-AI-master
    ```
 
+4. Create the conda environment for RAiSD-AI: 
+
+- Without GPU support!
+   ```bash
+   conda create -f "environment-raisd-ai.yml"
+   ```
+- With GPU support!
+   ```bash
+   conda create -f "environment-raisd-ai-gpu.yml"
+   ```
+
+
+
+
+conda create -f "environment-raisd-ai.yml"
+
+
 4. Compile RAiSD-AI:
 
    ```bash
