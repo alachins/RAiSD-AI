@@ -97,10 +97,10 @@ Download and Compile
    conda env create -f environment-raisd-ai-gui.yml
    ```
 
-6. Compile RAiSD-AI:
+6. Activate the Conda environment for RAiSD-AI and compile:
 
    ```bash
-   ./compile-RAiSD-AI.sh
+   conda activate raisd-ai; ./compile-RAiSD-AI.sh
    ```
 
 
