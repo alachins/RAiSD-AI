@@ -217,27 +217,34 @@ FASTER-NN-G can be used as 2x2 class model that can simultaneously predict two s
 
 #### Operations 8-9: Full scan for selective sweeps using SweepNet (TF = 6 minutes, PT = 2 minutes)
 
-The following commands will perform full scans of 100 simulations for selective sweeps using the TensorFlow (8) and PyTorch (9) implementations of SweepNet for all previously generated data types and formats that are supported with this network.
+The following commands will perform full scans of 100 simulations for selective sweeps using the TensorFlow (8) and PyTorch (9) implementations of SweepNet for all previously generated data types and formats that are supported with this network. In full scan mode, RAiSD-AI extracts a number of windows across the total region length to be scanned. In these test runs, 20 windows are generated for each simulation.
 
-	 $ ./test-all.sh RAiSD-AI 8
-  	 $ ./test-all.sh RAiSD-AI 9
+   ```bash
+   ./test-all.sh RAiSD-AI 8; ./test-all.sh RAiSD-AI 9
+   ```
 
-In full scan mode, RAiSD-AI extracts a number of windows across the total region length to be scanned. In these test runs, 20 windows are generated for each simulation. 
-
-
-
-#### Operation 10: Full scan for selective sweeps using FAST-NN (2.5 minutes)
-
-The following commands will perform full scans of 100 simulations for selective sweeps using the FAST-NN network architecture (PyTorch implementation only) for all previously generated data types and formats that are supported with this network.
-
-	 $ ./test-all.sh RAiSD-AI 10
+ 
 
 
-#### Operation 11: Full scan for selective sweeps and recombination hotspots using SweepNetRecombination (2.5 minutes)
 
-The following commands will perform full scans of 100 simulations for selective sweeps using the SweepNetRecombination network architecture (PyTorch implementation only) for all previously generated data types and formats that are supported with this network.
+#### Operation 10: Full scan for selective sweeps using FASTER-NN (2.5 minutes)
 
-	 $ ./test-all.sh RAiSD-AI 11
+The following commands will perform full scans of 100 simulations for selective sweeps using the FASTER-NN network architecture (PyTorch implementation only) for all previously generated data types and formats that are supported with this network.
+
+
+   ```bash
+   ./test-all.sh RAiSD-AI 10
+   ```
+
+
+#### Operation 11: Full scan for selective sweeps and recombination hotspots using FASTER-NN-G (2.5 minutes)
+
+The following commands will perform full scans of 100 simulations for selective sweeps using the FASTER-NN-G network architecture (PyTorch implementation only) for all previously generated data types and formats that are supported with this network.
+
+
+   ```bash
+   ./test-all.sh RAiSD-AI 11
+   ```
 
 	 
 In-tool Help
