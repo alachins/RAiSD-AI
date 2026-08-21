@@ -58,6 +58,13 @@ URL: https://ecoevorxiv.org/repository/view/12341/
 Download and Compile
 --------------------
 
+## Download and compile
+
+1. Download RAiSD-AI:
+
+   ```bash
+   wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
+
 The following commands can be used to download and compile the source code. 
 
     $ mkdir RAiSD-AI
