@@ -20,18 +20,7 @@ About
 RAiSD (Raised Accuracy in Sweep Detection) is a stand-alone software implementation of the μ statistic for selective sweep detection. Unlike existing implementations, including our previously released tools (SweeD and OmegaPlus), RAiSD scans whole-genome SNP data based on a composite evaluation scheme that captures multiple sweep signatures at once. 
 
 RAiSD-AI (RAiSD using AI) includes all the features of the latest RAiSD version (v3.1, released 8/8/2022) and introduces support for the practical deployment of Convolutional Neural Networks (CNN) in population genetics research. In addition to using the μ statistic for selective sweep detection, RAiSD-AI can also a) extract training data from standard file formats like FASTA and VCF, b) use TensorFlow or Pytorch to train a network and generate a CNN model, c) test the CNN model and report various classification metrics, and d) deploy the CNN model to scan standard file formats (and optionally report detection metrics). RAiSD-AI is primarily designed and optimized for selective sweep detection, but can also be used to identify other regions of interest (e.g., recombination hotspots, negative selection), provided that the CNN is appropriately trained. 
-    echo "	0 -> Generates training data"
-    echo "	1 -> Generates test data"
-    echo "	2 -> Trains and tests the TensorFlow implementation of SweepNet"
-    echo "	3 -> Trains and tests the PyTorch implementation of SweepNet"
-    echo "	4 -> Trains and tests FASTER-NN (PyTorch)"
-    echo "	5 -> Generates training data for FASTER-NN-G (2-factor)"
-    echo "	6 -> Generates test data for FASTER-NN-G (2-factor)"
-    echo "	7 -> Trains and tests FASTER-NN-G (2-factor, PyTorch)"
-    echo "	8 -> Full scan using the TensorFlow implementation of SweepNet"
-    echo "	9 -> Full scan using the PyTorch implementation of SweepNet"
-    echo "       10 -> Full scan using FASTER-NN (PyTorch)"  
-    echo "       11 -> Full scan using FASTER-NN-G (2-factor, PyTorch)"
+
 The main article describing RAiSD and the μ statisticconda create -f "environment-raisd-ai.yml" is published in Communications Biology:
 
 1. RAiSD detects positive selection based on multiple signatures of a selective sweep and SNP vectors ([PDF](https://www.nature.com/articles/s42003-018-0085-8.pdf))  
