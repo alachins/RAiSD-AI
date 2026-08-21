@@ -246,6 +246,8 @@ The following commands will perform full scans of 100 simulations for selective 
    ./test-all.sh RAiSD-AI 11
    ```
 
+
+<hr>
 	 
 In-tool Help
 ------------
