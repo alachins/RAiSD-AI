@@ -46,6 +46,9 @@ URL: https://dl.acm.org/doi/pdf/10.1145/3592979.3593411
 7. Scalable CNN-based classification of selective sweeps using derived allele frequencies ([PDF](https://academic.oup.com/bioinformatics/article-pdf/40/Supplement_2/ii29/59016924/btae385.pdf))       
 URL: https://doi.org/10.1093/bioinformatics/btae385
 
+8. Fast and accurate deep learning scans for signatures of natural selection in genomes using FASTER-NN ([PDF](https://www.nature.com/articles/s42003-025-07480-7.pdf))       
+URL: https://www.nature.com/articles/s42003-025-07480-7
+
 
 Changes to the μ statistic (May 2019)
 -------------------------------------
