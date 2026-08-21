@@ -91,7 +91,7 @@ Download and Compile
    ```
 
 
-5. Create the Conda environment for the RAiSD-AI GUI:
+5. Create the Conda environment for the RAiSD-AI GUI (Optional):
 
    ```bash
    conda env create -f environment-raisd-ai-gui.yml
