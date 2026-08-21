@@ -58,10 +58,6 @@ URL: https://ecoevorxiv.org/repository/view/12341/
 Download and Compile
 --------------------
 
-## Download and compile
-
-Run the following commands one at a time.
-
 1. Download RAiSD-AI:
 
    ```bash
