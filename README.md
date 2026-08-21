@@ -60,10 +60,32 @@ Download and Compile
 
 ## Download and compile
 
+Run the following commands one at a time.
+
 1. Download RAiSD-AI:
 
    ```bash
    wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
+   ```
+
+2. Extract the downloaded archive:
+
+   ```bash
+   unzip master.zip
+   ```
+
+3. Enter the RAiSD-AI directory:
+
+   ```bash
+   cd RAiSD-AI-master
+   ```
+
+4. Compile RAiSD-AI:
+
+   ```bash
+   ./compile-RAiSD-AI.sh
+   ```
+
 
 The following commands can be used to download and compile the source code. 
 
