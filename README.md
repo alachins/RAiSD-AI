@@ -81,7 +81,7 @@ Download and Compile
    CPU-only:
 
    ```bash
-   conda env create -f environment-raisd-ai.yml
+   conda e./RAiSD-AI -n test_run -I datasets/test/msselection1_10sims.out -L 100000 -Onv create -f environment-raisd-ai.yml
    ```
 
    GPU-enabled (NVIDIA CUDA):
@@ -108,6 +108,14 @@ Download and Compile
 	RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
+Start the Graphical User Interface (GUI)
+--------
+
+Activate the Conda environment for the RAiSD-AI GUI and start the application:
+
+   ```bash
+   conda activate raisd-ai-gui; python -m gui.app
+   ```
 
 Simple Test Run
 --------
@@ -117,7 +125,9 @@ To verify that RAiSD-AI is installed correctly, a simple test run can be done wi
    ```bash
    ./RAiSD-AI -n test_run -I datasets/test/msselection1_10sims.out -L 100000 -O
    ```
- 
+   
+> [!IMPORTANT]
+> Before running RAiSD-AI from the command line, always activate either the `raisd-ai` or `raisd-ai-cuda` environment. The `raisd-ai-gui` environment is intended exclusively for the GUI and should not be used for command-line runs.
 
 
 Extensive Test Run
