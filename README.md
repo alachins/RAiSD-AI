@@ -205,15 +205,15 @@ The following command will train (10 epochs) and test the FASTER-NN network arch
    ```
 
 
-#### Operations 5-7: Train and test FASTER-NN-G (5 minutes)
+#### Operations 5-7: Train and test FASTER-NN-G for 2-label classification (5 minutes)
 
-The following commands will generate training (5) and test data (6) for the FASTER-NN-G network architecture and also train and test it (7) for all previously generated data types and formats that are supported with this network.
+The following commands will generate training (5) and test data (6) for the FASTER-NN-G network architecture (specifically for 2-label classificaiton) and also train and test it (7) for all previously generated data types and formats that are supported with this network.
 
    ```bash
    ./test-all.sh RAiSD-AI 5; ./test-all.sh RAiSD-AI 6; ./test-all.sh RAiSD-AI 7
    ```
 
-SweepNetRecombination is a 2x2 class model that can simultaneously predict two sets of classes. For example, it can be used to distinguish between recombination hotspots or not, and then distinguish between neutral and a selective sweep. This enables the detection of selective sweeps in recombination hotspots. The reported validation accuracy is the product of the individual validation accuracies of the two sets of classes. Note that the provided training and test data do not contain recombination hotspots. 
+FASTER-NN-G can be used as 2x2 class model that can simultaneously predict two sets of classes. For example, it can be used to distinguish between recombination hotspots or not, and then distinguish between neutral and a selective sweep. This enables the detection of selective sweeps in recombination hotspots. The reported validation accuracy is the product of the individual validation accuracies of the two sets of classes. Note that the provided training and test data do not contain recombination hotspots. 
 
 
 #### Operations 8-9: Full scan for selective sweeps using SweepNet (TF = 6 minutes, PT = 2 minutes)
