@@ -1,7 +1,7 @@
 
 <img width="1114" height="235" alt="Full name - Copy" src="https://github.com/user-attachments/assets/3aadbd69-0222-46c3-aa89-5e96e4efccdc" />
 
-RAiSD-AI: software to train, test, and use Convolutional Neural Networks for selective sweep detection
+RAiSD-AI: a software tool for training, testing, and deploying Convolutional Neural Networks for selective sweep detection
 ===============================================
 
 RAiSD-AI is an extension of the [RAiSD](https://www.nature.com/articles/s42003-018-0085-8.pdf) codebase ([v3.1](https://github.com/pephco/RAiSD)). RAiSD-AI supports all RAiSD features.
