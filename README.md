@@ -103,9 +103,9 @@ Download and Compile
    conda activate raisd-ai; ./compile-RAiSD-AI.sh
    ```
 
-The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
+	The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
-RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
+	RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
 
