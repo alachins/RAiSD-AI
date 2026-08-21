@@ -20,7 +20,18 @@ About
 RAiSD (Raised Accuracy in Sweep Detection) is a stand-alone software implementation of the μ statistic for selective sweep detection. Unlike existing implementations, including our previously released tools (SweeD and OmegaPlus), RAiSD scans whole-genome SNP data based on a composite evaluation scheme that captures multiple sweep signatures at once. 
 
 RAiSD-AI (RAiSD using AI) includes all the features of the latest RAiSD version (v3.1, released 8/8/2022) and introduces support for the practical deployment of Convolutional Neural Networks (CNN) in population genetics research. In addition to using the μ statistic for selective sweep detection, RAiSD-AI can also a) extract training data from standard file formats like FASTA and VCF, b) use TensorFlow or Pytorch to train a network and generate a CNN model, c) test the CNN model and report various classification metrics, and d) deploy the CNN model to scan standard file formats (and optionally report detection metrics). RAiSD-AI is primarily designed and optimized for selective sweep detection, but can also be used to identify other regions of interest (e.g., recombination hotspots, negative selection), provided that the CNN is appropriately trained. 
-
+    echo "	0 -> Generates training data"
+    echo "	1 -> Generates test data"
+    echo "	2 -> Trains and tests the TensorFlow implementation of SweepNet"
+    echo "	3 -> Trains and tests the PyTorch implementation of SweepNet"
+    echo "	4 -> Trains and tests FASTER-NN (PyTorch)"
+    echo "	5 -> Generates training data for FASTER-NN-G (2-factor)"
+    echo "	6 -> Generates test data for FASTER-NN-G (2-factor)"
+    echo "	7 -> Trains and tests FASTER-NN-G (2-factor, PyTorch)"
+    echo "	8 -> Full scan using the TensorFlow implementation of SweepNet"
+    echo "	9 -> Full scan using the PyTorch implementation of SweepNet"
+    echo "       10 -> Full scan using FASTER-NN (PyTorch)"  
+    echo "       11 -> Full scan using FASTER-NN-G (2-factor, PyTorch)"
 The main article describing RAiSD and the μ statisticconda create -f "environment-raisd-ai.yml" is published in Communications Biology:
 
 1. RAiSD detects positive selection based on multiple signatures of a selective sweep and SNP vectors ([PDF](https://www.nature.com/articles/s42003-018-0085-8.pdf))  
@@ -132,22 +143,39 @@ To verify that RAiSD-AI is installed correctly, a simple test run can be done wi
 Extensive Test Runs
 ---------
 
-All basic RAiSD-AI operation modes can be tested through the provided test script test-all.sh, which requires two input arguments: the tool name and an integer value. The tool name is either RAiSD-AI or RAiSD-AI-ZLIB. The integer value specifies the operation:
+The provided `test-all.sh` script can be used to test all core RAiSD-AI operation modes:
 
-	 0 -> Generates training data
-	 1 -> Generates test data
-	 2 -> Trains and tests the TensorFlow implementation of SweepNet
-	 3 -> Trains and tests the PyTorch implementation of SweepNet
-	 4 -> Trains and tests FAST-NN (PyTorch)
-	 5 -> Generates training data for SweepNetRecombination
-	 6 -> Generates test data for SweepNetRecombination
-	 7 -> Trains and tests SweepNetRecombination (PyTorch)
-	 8 -> Full scan using the TensorFlow implementation of SweepNet
-	 9 -> Full scan using the PyTorch implementation of SweepNet
-    10 -> Full scan using FAST-NN (PyTorch)
-    11 -> Full scan using SweepNetRecombination (PyTorch)
+#### Usage
 
-After completing all tests, you can run the clean-up-dir.sh script to remove all files generated during the extensive testing process.
+```bash
+./test-all.sh <tool> <operation>
+```
+
+The script accepts two arguments:
+
+- `<tool>`: the executable to test, either `RAiSD-AI` or `RAiSD-AI-ZLIB`.
+- `<operation>`: an integer from `0` to `11` that selects one of the operations listed below.
+
+  
+### Available operations
+
+| Option | Operation |
+|:------:|-----------|
+| `0` | Generate training data |
+| `1` | Generate test data |
+| `2` | Train and test SweepNet using TensorFlow |
+| `3` | Train and test SweepNet using PyTorch |
+| `4` | Train and test FASTER-NN using PyTorch |
+| `5` | Generate training data for FASTER-NN-G (2-factor) |
+| `6` | Generate test data for FASTER-NN-G (2-factor) |
+| `7` | Train and test FASTER-NN-G using PyTorch (2-factor) |
+| `8` | Run a full scan using SweepNet with TensorFlow |
+| `9` | Run a full scan using SweepNet with PyTorch |
+| `10` | Run a full scan using FASTER-NN with PyTorch |
+| `11` | Run a full scan using FASTER-NN-G with PyTorch (2-factor) |
+
+
+After completing all tests, you can run the `clean-up-dir.sh` script to remove all files generated during the extensive testing process.
 
 #### Operations 0 and 1: Generate training/test data (Expected total run time = 35 seconds)
 
@@ -159,10 +187,12 @@ The following commands will parse the ms files in folder datasets/train/ and gen
 
 The different data types and formats are:
 
-	 - raw SNP data (PNG)
- 	 - raw SNP data and relative SNP distances (PNG and binary format)
-  	 - raw SNP data scaled based on the mu-statistic (PNG)
-   	 - derived allele frequencies and relative SNP distances (binary format)
+| Data representation | Format |
+|---------------------|--------|
+| Raw SNP data | PNG |
+| Raw SNP data with relative SNP distances | PNG and binary |
+| Raw SNP data scaled using the μ-statistic | PNG |
+| Derived allele frequencies with relative SNP distances | Binary |
 
 Two classes are generated (neutral and selective sweep) from a simple mild-bottleneck dataset. A total of 200 windows are used for training, and 20 windows are used for testing.
 
@@ -170,8 +200,11 @@ Two classes are generated (neutral and selective sweep) from a simple mild-bottl
 
 The following commands will use the TensorFlow (2) and PyTorch (3) implementations of SweepNet for training (10 epochs) and testing, generating models for all previously generated data types and formats that are supported with SweepNet.
 
-	 $ ./test-all.sh RAiSD-AI 2
-  	 $ ./test-all.sh RAiSD-AI 3
+
+   ```bash
+   ./test-all.sh RAiSD-AI 2; ./test-all.sh RAiSD-AI 3
+   ```
+
 
 
 #### Operation 4: Train and test CNN architecture FAST-NN (70 seconds)
