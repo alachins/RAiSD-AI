@@ -103,21 +103,6 @@ Download and Compile
    conda activate raisd-ai; ./compile-RAiSD-AI.sh
    ```
 
-
-The following commands can be used to download and compile the source code. 
-
-    $ mkdir RAiSD-AI
-    $ cd RAiSD-AI
-    $ wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
-    $ unzip master.zip
-    $ cd RAiSD-AI-master
-    $ ./compile-RAiSD-AI.sh
-    
-Command to directly copy to terminal:
-    
-     mkdir RAiSD-AI; cd RAiSD-AI; wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-master; ./compile-RAiSD-AI.sh
-    
-
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
 RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
