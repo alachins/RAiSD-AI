@@ -5,6 +5,11 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - gcc_linux-64
+  - gxx_linux-64
+  - sysroot_linux-64
+  - make
+  - pkg-config
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
   - _tflow_select=2.3.0=mkl
