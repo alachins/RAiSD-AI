@@ -1,0 +1,132 @@
+name: raisd-ai-cuda-v2
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Python and build tools. The old py38 build pins have been removed so
+  # Conda can resolve packages for Python 3.11.
+  - python=3.11
+  - pip
+  - setuptools
+  - wheel
+  - gcc_linux-64
+  - gxx_linux-64
+  - sysroot_linux-64
+  - make
+  - pkg-config
+  - ninja
+
+  # Keep the original scientific, population-genetics, and simulation tools.
+  - bcftools=1.17
+  - htslib
+  - gsl=2.7
+  - demes
+  - msprime
+  - pyslim
+  - slim
+  - stdpopsim
+  - tskit
+
+  # Numerical, data-processing, and plotting stack.
+  - blas=*=mkl
+  - mkl
+  - mkl-service
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - pillow
+  - h5py
+  - zarr
+  - numcodecs
+  - zstandard
+  - asciitree
+  - gmpy2
+  - msgpack-python
+  - networkx
+  - sympy
+  - mpmath
+  - opt_einsum
+  - packaging
+  - python-dateutil
+  - pytz
+  - pooch
+
+  # Preserve the existing Qt GUI and image-library support.
+  - pyqt=5.15
+  - pyqt5-sip
+  - qt-main=5.15
+  - jpeg
+  - libpng
+  - libtiff
+  - freetype
+  - zlib
+
+  # Retain the original utility, networking, and serialization packages.
+  - abseil-cpp
+  - absl-py
+  - aiohttp
+  - aiosignal
+  - appdirs
+  - astunparse
+  - async-timeout
+  - attrs
+  - blinker
+  - brotli
+  - brotli-python
+  - cachetools
+  - certifi
+  - cffi
+  - charset-normalizer
+  - click
+  - cryptography
+  - fasteners
+  - flatbuffers
+  - google-auth
+  - google-auth-oauthlib
+  - google-pasta
+  - grpc-cpp
+  - grpcio
+  - h2
+  - hpack
+  - humanize
+  - hyperframe
+  - idna
+  - jsonschema
+  - jsonschema-specifications
+  - kastore
+  - keras-preprocessing
+  - markdown
+  - markupsafe
+  - oauthlib
+  - pyasn1
+  - pyasn1-modules
+  - pyjwt
+  - pyopenssl
+  - pyparsing
+  - pysocks
+  - pyyaml
+  - requests
+  - requests-oauthlib
+  - ruamel.yaml
+  - rsa
+  - six
+  - svgwrite
+  - termcolor
+  - tornado
+  - urllib3
+  - werkzeug
+  - wrapt
+  - yaml
+  - yarl
+
+  # Install mutually compatible framework versions. TensorFlow is retained
+  # as in the original environment (CPU workflow); PyTorch uses CUDA 13.0.
+  - pip:
+      - --index-url=https://download.pytorch.org/whl/cu130
+      - --extra-index-url=https://pypi.org/simple
+      - torch==2.12.0
+      - torchvision==0.27.0
+      - tensorflow==2.21.0
+      - tensorboard==2.21.0

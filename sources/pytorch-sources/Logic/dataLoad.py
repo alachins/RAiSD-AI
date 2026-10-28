@@ -6,6 +6,30 @@ import os
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 from torch.utils.data import random_split
 import numpy as np
+import inspect
+from packaging.version import InvalidVersion, Version
+
+
+def _datasetfolder_supports_allow_empty():
+    """Detect the DatasetFolder API across stable, CUDA, and development builds."""
+    try:
+        version = Version(str(torchvision.__version__))
+        supports_allow_empty = version.release[:2] >= (0, 18)
+    except (AttributeError, InvalidVersion):
+        supports_allow_empty = False
+
+    # The installed signature is authoritative for backports and previews.
+    # Keep the version result as a fallback if inspection is unavailable.
+    try:
+        parameters = inspect.signature(
+            torchvision.datasets.DatasetFolder.__init__
+        ).parameters
+    except (TypeError, ValueError):
+        return supports_allow_empty
+    return "allow_empty" in parameters
+
+
+_DATASET_FOLDER_SUPPORTS_ALLOW_EMPTY = _datasetfolder_supports_allow_empty()
 
 def snp_file_loader_prev(path):
         data = np.memmap(path, mode='r+').tobytes()
@@ -113,7 +137,14 @@ class CustomImageFolder(torchvision.datasets.DatasetFolder):
             extensions = (".png",)
             loader = torchvision.datasets.folder.default_loader
             
-        super().__init__(root, transform=transform, extensions=extensions, loader=loader)
+        dataset_kwargs = {
+            "transform": transform,
+            "extensions": extensions,
+            "loader": loader,
+        }
+        if _DATASET_FOLDER_SUPPORTS_ALLOW_EMPTY:
+            dataset_kwargs["allow_empty"] = False
+        super().__init__(root, **dataset_kwargs)
         self.mix_images = mix_images
         self.load_binary = load_binary
         self.train_detect = train_detect
@@ -205,6 +236,7 @@ class NoClassImageFolder(CustomImageFolder):
         class_to_idx: Optional[Dict[str, int]] = None,
         extensions: Optional[Union[str, Tuple[str, ...]]] = None,
         is_valid_file: Optional[Callable[[str], bool]] = None,
+        allow_empty: bool = False,
     ) -> List[Tuple[str, int]]:
         """Generates a list of samples of a form (path_to_sample, class).
 
@@ -250,7 +282,7 @@ class NoClassImageFolder(CustomImageFolder):
                             available_classes.add(target_class)
 
         empty_classes = set(class_to_idx.keys()) - available_classes
-        if empty_classes:
+        if empty_classes and not allow_empty:
             msg = f"Found no valid file for the classes {', '.join(sorted(empty_classes))}. "
             if extensions is not None:
                 msg += f"Supported extensions are: {extensions if isinstance(extensions, str) else ', '.join(extensions)}"
