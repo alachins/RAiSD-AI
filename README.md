@@ -78,19 +78,19 @@ Download and Compile
    CPU-only:
 
    ```bash
-   conda env create -f environment-raisd-ai.yml
+   CONDA_CHANNEL_PRIORITY=flexible conda env create -f environment-raisd-ai.yml
    ```
 
    GPU-enabled (NVIDIA CUDA):
 
    ```bash
-   conda env create -f environment-raisd-ai-cuda.yml
+   CONDA_CHANNEL_PRIORITY=flexible conda env create -f environment-raisd-ai-cuda.yml
    ```
 
 5. Create the Conda environment for the RAiSD-AI GUI (Optional):
 
    ```bash
-   conda env create -f environment-raisd-ai-gui.yml
+   CONDA_CHANNEL_PRIORITY=flexible conda env create -f environment-raisd-ai-gui.yml
    ```
 
 6. Activate the Conda environment for RAiSD-AI and compile:
